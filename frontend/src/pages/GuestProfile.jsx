@@ -9,6 +9,7 @@ export default function GuestProfile() {
   const [guest, setGuest] = useState(null);
   const [form, setForm] = useState({
     pseudo: "",
+    bringing_item: "",
     allergies: "",
     diet: "",
     intolerances: "",
@@ -26,6 +27,7 @@ export default function GuestProfile() {
         setGuest(g);
         setForm({
           pseudo: g.pseudo || "",
+          bringing_item: g.bringing_item || "",
           allergies: g.allergies || "",
           diet: g.diet || "",
           intolerances: g.intolerances || "",
@@ -105,6 +107,16 @@ export default function GuestProfile() {
                   value={form.pseudo}
                   onChange={(e) => setForm({ ...form, pseudo: e.target.value })}
                   placeholder="Comment on t'appelle ?"
+                />
+              </div>
+
+              <div>
+                <label className="label">Je ramène... (facultatif)</label>
+                <input
+                  className="input"
+                  value={form.bringing_item}
+                  onChange={(e) => setForm({ ...form, bringing_item: e.target.value })}
+                  placeholder="Ex : des chaises, des enceintes, un gâteau..."
                 />
               </div>
 

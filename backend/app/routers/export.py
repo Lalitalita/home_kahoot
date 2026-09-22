@@ -29,10 +29,12 @@ def _csv_response(rows: list[list[str]], header: list[str], filename: str) -> St
 def export_guests(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
     guests = db.query(Guest).order_by(Guest.name).all()
     rows = [
-        [g.name, g.pseudo or "", g.description or "", g.access_code]
+        [g.name, g.pseudo or "", g.description or "", g.bringing_item or "", g.access_code]
         for g in guests
     ]
-    return _csv_response(rows, ["Nom", "Pseudo", "Description", "Code d'accès"], "invites.csv")
+    return _csv_response(
+        rows, ["Nom", "Pseudo", "Description", "Amène", "Code d'accès"], "invites.csv"
+    )
 
 
 @router.get("/allergies.csv")

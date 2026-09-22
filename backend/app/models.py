@@ -54,6 +54,7 @@ class Guest(Base):
     diet: Mapped[str | None] = mapped_column(Text, nullable=True)
     intolerances: Mapped[str | None] = mapped_column(Text, nullable=True)
     dietary_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bringing_item: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(

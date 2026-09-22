@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.database import Base, SessionLocal, engine as db_engine
+from app.database import Base, SessionLocal, engine as db_engine, sync_missing_columns
 from app.models import Admin
 from app.routers import auth, export, guests, messages, questions, quiz_ws, settings as settings_router
 from app.security import hash_password
@@ -29,6 +29,7 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup() -> None:
     Base.metadata.create_all(bind=db_engine)
+    sync_missing_columns()
 
     with SessionLocal() as db:
         existing = db.query(Admin).filter(Admin.username == settings.admin_username).first()

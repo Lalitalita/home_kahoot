@@ -44,6 +44,9 @@ export default function GuestList() {
                   {g.pseudo && <span className="text-party-400 font-normal"> ({g.pseudo})</span>}
                 </h3>
                 {g.description && <p className="text-sm text-slate-400 mt-1">{g.description}</p>}
+                {g.bringing_item && (
+                  <p className="text-sm text-party-300 mt-1">🎒 Amène {g.bringing_item}</p>
+                )}
               </div>
             </div>
           ))}

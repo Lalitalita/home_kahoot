@@ -48,6 +48,7 @@ class GuestPublic(BaseModel):
     pseudo: str | None
     photo_url: str | None
     description: str | None
+    bringing_item: str | None
 
 
 class GuestSelf(BaseModel):
@@ -64,6 +65,7 @@ class GuestSelf(BaseModel):
     diet: str | None
     intolerances: str | None
     dietary_comment: str | None
+    bringing_item: str | None
 
 
 class GuestSelfUpdate(BaseModel):
@@ -72,6 +74,7 @@ class GuestSelfUpdate(BaseModel):
     diet: str | None = None
     intolerances: str | None = None
     dietary_comment: str | None = None
+    bringing_item: str | None = None
 
 
 class GuestAdmin(GuestSelf):
@@ -93,6 +96,7 @@ class GuestUpdateAdmin(BaseModel):
     diet: str | None = None
     intolerances: str | None = None
     dietary_comment: str | None = None
+    bringing_item: str | None = None
 
 
 # ---------- Questions ----------

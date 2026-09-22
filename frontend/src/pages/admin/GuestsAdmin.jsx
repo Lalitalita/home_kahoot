@@ -93,6 +93,7 @@ export default function AdminGuests() {
               <th className="p-3">Nom</th>
               <th className="p-3">Pseudo</th>
               <th className="p-3">Description</th>
+              <th className="p-3">Amène</th>
               {showDiet && (
                 <>
                   <th className="p-3">Allergies</th>
@@ -120,6 +121,12 @@ export default function AdminGuests() {
                     onSave={(v) => handleUpdate(g, "description", v)}
                   />
                 </td>
+                <td className="p-3 max-w-[14rem]">
+                  <EditableCell
+                    value={g.bringing_item || ""}
+                    onSave={(v) => handleUpdate(g, "bringing_item", v)}
+                  />
+                </td>
                 {showDiet && (
                   <>
                     <td className="p-3 text-amber-300">{g.allergies || "-"}</td>
@@ -140,7 +147,7 @@ export default function AdminGuests() {
             ))}
             {guests.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-6 text-center text-slate-500">
+                <td colSpan={10} className="p-6 text-center text-slate-500">
                   Aucun invité pour l'instant.
                 </td>
               </tr>
