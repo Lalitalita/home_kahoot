@@ -7,7 +7,16 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine as db_engine, sync_missing_columns
 from app.models import Admin
-from app.routers import auth, export, guests, messages, questions, quiz_ws, settings as settings_router
+from app.routers import (
+    auth,
+    budget,
+    export,
+    guests,
+    messages,
+    questions,
+    quiz_ws,
+    settings as settings_router,
+)
 from app.security import hash_password
 
 settings = get_settings()
@@ -49,6 +58,7 @@ app.include_router(guests.router)
 app.include_router(questions.router)
 app.include_router(messages.router)
 app.include_router(settings_router.router)
+app.include_router(budget.router)
 app.include_router(export.router)
 app.include_router(quiz_ws.router)
 app.include_router(quiz_ws.control_router)

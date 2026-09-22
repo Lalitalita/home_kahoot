@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 const links = [
   { to: "/admin", label: "Tableau de bord", end: true },
   { to: "/admin/invites", label: "Invités" },
+  { to: "/admin/budget", label: "Budget & listes" },
   { to: "/admin/questions", label: "Questions du quiz" },
   { to: "/admin/messages", label: "Mur de messages" },
   { to: "/admin/soiree", label: "Mode soirée" },

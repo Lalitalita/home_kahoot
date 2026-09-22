@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import QuestionStatus
+from app.models import BudgetCategory, QuestionStatus
 
 # ---------- Auth ----------
 
@@ -181,3 +181,60 @@ class MessagePublic(BaseModel):
 
 class AppSettingsPublic(BaseModel):
     party_mode_active: bool
+
+
+# ---------- Budget & lists ----------
+
+
+class BudgetItemCreate(BaseModel):
+    category: BudgetCategory
+    name: str
+    price: float = 0
+    prep_time_minutes: int | None = None
+    allergens: str | None = None
+    notes: str | None = None
+
+
+class BudgetItemUpdate(BaseModel):
+    category: BudgetCategory | None = None
+    name: str | None = None
+    price: float | None = None
+    prep_time_minutes: int | None = None
+    allergens: str | None = None
+    notes: str | None = None
+    is_done: bool | None = None
+
+
+class AllergyConflict(BaseModel):
+    guest_id: str
+    guest_name: str
+    matched_allergen: str
+    guest_allergy_text: str
+
+
+class BudgetItemAdmin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    category: BudgetCategory
+    name: str
+    price: float
+    prep_time_minutes: int | None
+    allergens: str | None
+    notes: str | None
+    is_done: bool
+    created_at: datetime
+    conflicts: list[AllergyConflict] = []
+
+
+class BudgetSummary(BaseModel):
+    budget_target: float | None
+    total_activities: float
+    total_food: float
+    total: float
+    remaining: float | None
+    items_count: int
+
+
+class BudgetTargetUpdate(BaseModel):
+    budget_target: float | None = None

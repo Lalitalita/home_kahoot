@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import PrepGate from "./components/PrepGate.jsx";
 import RequireAdmin from "./components/RequireAdmin.jsx";
+import AdminBudget from "./pages/admin/Budget.jsx";
 import AdminDashboard from "./pages/admin/Dashboard.jsx";
 import AdminGuests from "./pages/admin/GuestsAdmin.jsx";
 import AdminLogin from "./pages/admin/Login.jsx";
@@ -44,6 +45,14 @@ export default function App() {
         element={
           <RequireAdmin>
             <AdminGuests />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/budget"
+        element={
+          <RequireAdmin>
+            <AdminBudget />
           </RequireAdmin>
         }
       />

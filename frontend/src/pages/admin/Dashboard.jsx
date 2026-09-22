@@ -10,17 +10,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function load() {
-      const [guests, questions, messages, settings] = await Promise.all([
+      const [guests, questions, messages, settings, budget] = await Promise.all([
         api.get("/api/admin/guests", { auth: true }),
         api.get("/api/admin/questions", { auth: true }),
         api.get("/api/messages"),
         api.get("/api/settings"),
+        api.get("/api/admin/budget/summary", { auth: true }),
       ]);
       setStats({
         guests: guests.length,
         pendingQuestions: questions.filter((q) => q.status === "pending").length,
         acceptedQuestions: questions.filter((q) => q.status === "accepted").length,
         messages: messages.length,
+        budgetTotal: budget.total,
+        budgetTarget: budget.budget_target,
+        budgetOver: budget.remaining !== null && budget.remaining < 0,
       });
       setPartyMode(settings.party_mode_active);
     }
@@ -48,6 +52,12 @@ export default function AdminDashboard() {
       {stats && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Invités" value={stats.guests} to="/admin/invites" />
+          <StatCard
+            label={`Budget prévu${stats.budgetTarget ? ` / ${stats.budgetTarget} €` : ""}`}
+            value={`${stats.budgetTotal.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`}
+            to="/admin/budget"
+            highlight={stats.budgetOver}
+          />
           <StatCard
             label="Questions en attente"
             value={stats.pendingQuestions}

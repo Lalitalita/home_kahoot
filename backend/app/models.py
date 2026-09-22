@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -121,9 +122,34 @@ class AppSettings(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default="singleton")
     party_mode_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    budget_target: Mapped[float | None] = mapped_column(Float, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+
+class BudgetCategory(str, enum.Enum):
+    activity = "activity"
+    food = "food"
+
+
+class BudgetItem(Base):
+    """A planned expense: an activity or a food item. Food items can be
+    tagged with the allergens they contain so the admin can cross-check
+    them against every guest's stated allergies/intolerances."""
+
+    __tablename__ = "budget_items"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    category: Mapped[BudgetCategory] = mapped_column(Enum(BudgetCategory))
+    name: Mapped[str] = mapped_column(String)
+    price: Mapped[float] = mapped_column(Float, default=0)
+    prep_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Comma/semicolon-separated free-text tags, e.g. "arachides, gluten".
+    allergens: Mapped[str | None] = mapped_column(Text, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_done: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class GamePlayer(Base):
