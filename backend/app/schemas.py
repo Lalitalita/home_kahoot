@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import BudgetCategory, QuestionStatus
+from app.models import BudgetCategory, QuestionStatus, ScheduleItemType
 
 # ---------- Auth ----------
 
@@ -238,3 +238,83 @@ class BudgetSummary(BaseModel):
 
 class BudgetTargetUpdate(BaseModel):
     budget_target: float | None = None
+
+
+# ---------- Day schedule ----------
+
+
+class ScheduleItemCreate(BaseModel):
+    type: ScheduleItemType
+    title: str
+    duration_minutes: int = 30
+    fixed_start_time: str | None = None
+    notes: str | None = None
+
+
+class ScheduleItemUpdate(BaseModel):
+    type: ScheduleItemType | None = None
+    title: str | None = None
+    duration_minutes: int | None = None
+    fixed_start_time: str | None = None
+    notes: str | None = None
+    order_index: int | None = None
+
+
+class ScheduleItemAdmin(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    type: ScheduleItemType
+    title: str
+    duration_minutes: int
+    fixed_start_time: str | None
+    notes: str | None
+    order_index: int
+    created_at: datetime
+
+
+class DayStartUpdate(BaseModel):
+    day_start_time: str
+
+
+class DayScheduleSettings(BaseModel):
+    day_start_time: str
+
+
+# ---------- Quiz sessions & results ----------
+
+
+class GameSessionSummary(BaseModel):
+    id: str
+    label: str
+    started_at: datetime
+    ended_at: datetime | None
+    players_count: int
+    answers_count: int
+    top_score: int
+
+
+class PlayerAnswerDetail(BaseModel):
+    question_id: str
+    question_text: str
+    choices: list[str]
+    correct_index: int
+    choice_index: int
+    is_correct: bool
+    points: int
+    response_time_ms: int
+
+
+class PlayerResult(BaseModel):
+    player_id: str
+    nickname: str
+    score: int
+    answers: list[PlayerAnswerDetail]
+
+
+class GameSessionDetail(BaseModel):
+    id: str
+    label: str
+    started_at: datetime
+    ended_at: datetime | None
+    players: list[PlayerResult]

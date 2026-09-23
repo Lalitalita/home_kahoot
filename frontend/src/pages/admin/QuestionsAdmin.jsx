@@ -74,7 +74,7 @@ export default function AdminQuestions() {
             key={f}
             onClick={() => setFilter(f)}
             className={`rounded-full px-3 py-1.5 text-sm font-medium ${
-              filter === f ? "bg-party-600 text-white" : "bg-stone-100 text-stone-500"
+              filter === f ? "bg-party-600 text-white" : "bg-ink-800 text-ink-400"
             }`}
           >
             {{ all: "Toutes", pending: "En attente", accepted: "Acceptées", rejected: "Refusées" }[f]}
@@ -138,7 +138,7 @@ export default function AdminQuestions() {
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
                           q.correct_index === n - 1
                             ? "bg-emerald-500 text-white"
-                            : "bg-stone-100 text-stone-400"
+                            : "bg-ink-800 text-ink-500"
                         }`}
                       >
                         {n}
@@ -151,7 +151,7 @@ export default function AdminQuestions() {
                       <button
                         type="button"
                         title="Marquer comme bonne réponse"
-                        className="text-xs text-stone-400 hover:text-emerald-600 shrink-0"
+                        className="text-xs text-ink-500 hover:text-emerald-600 shrink-0"
                         onClick={() => updateField(q, "correct_index", n - 1)}
                       >
                         ✓
@@ -177,7 +177,7 @@ export default function AdminQuestions() {
                 <span className={`text-xs px-2 py-1 rounded-full ${STATUS_STYLE[q.status]}`}>
                   {q.status}
                 </span>
-                <span className="text-xs text-stone-400">
+                <span className="text-xs text-ink-500">
                   {q.guest_id ? "Proposée par un invité" : "Admin"}
                 </span>
                 <div className="flex gap-1">
@@ -200,7 +200,7 @@ export default function AdminQuestions() {
           </div>
         ))}
         {filtered.length === 0 && (
-          <p className="text-stone-400 text-center py-8">Aucune question ici.</p>
+          <p className="text-ink-500 text-center py-8">Aucune question ici.</p>
         )}
       </div>
     </AdminLayout>

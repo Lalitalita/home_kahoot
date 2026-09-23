@@ -8,7 +8,9 @@ import AdminGuests from "./pages/admin/GuestsAdmin.jsx";
 import AdminLogin from "./pages/admin/Login.jsx";
 import AdminMessages from "./pages/admin/MessagesAdmin.jsx";
 import AdminPartyControl from "./pages/admin/PartyControl.jsx";
+import AdminPlanning from "./pages/admin/Planning.jsx";
 import AdminQuestions from "./pages/admin/QuestionsAdmin.jsx";
+import AdminResults from "./pages/admin/Results.jsx";
 import GuestList from "./pages/GuestList.jsx";
 import GuestProfile from "./pages/GuestProfile.jsx";
 import Home from "./pages/Home.jsx";
@@ -57,6 +59,14 @@ export default function App() {
         }
       />
       <Route
+        path="/admin/planning"
+        element={
+          <RequireAdmin>
+            <AdminPlanning />
+          </RequireAdmin>
+        }
+      />
+      <Route
         path="/admin/questions"
         element={
           <RequireAdmin>
@@ -77,6 +87,14 @@ export default function App() {
         element={
           <RequireAdmin>
             <AdminPartyControl />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/resultats"
+        element={
+          <RequireAdmin>
+            <AdminResults />
           </RequireAdmin>
         }
       />

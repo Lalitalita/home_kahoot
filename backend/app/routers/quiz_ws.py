@@ -1,6 +1,7 @@
 import json
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -102,9 +103,15 @@ def get_state(admin: Admin = Depends(get_current_admin)):
     return engine.public_state()
 
 
+class ResetGameRequest(BaseModel):
+    label: str | None = None
+
+
 @control_router.post("/reset")
-async def reset_game(admin: Admin = Depends(get_current_admin)):
-    await engine.reset()
+async def reset_game(
+    payload: ResetGameRequest | None = None, admin: Admin = Depends(get_current_admin)
+):
+    await engine.reset(label=payload.label if payload else None)
     return engine.public_state()
 
 

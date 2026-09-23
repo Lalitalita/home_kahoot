@@ -2,13 +2,14 @@ import asyncio
 import time
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import select
 
 from app.config import get_settings
 from app.database import SessionLocal
-from app.models import GameAnswer, GamePlayer, Question, QuestionStatus
+from app.models import GameAnswer, GamePlayer, GameSession, Question, QuestionStatus
 from app.ws_manager import manager
 
 settings = get_settings()
@@ -34,6 +35,7 @@ class PlayerState:
 
 @dataclass
 class GameState:
+    session_id: str | None = None
     phase: Phase = Phase.lobby
     questions: list[Question] = field(default_factory=list)
     question_index: int = -1
@@ -56,10 +58,21 @@ class QuizEngine:
             return self.state.questions[self.state.question_index]
         return None
 
-    async def reset(self) -> None:
+    async def reset(self, label: str | None = None) -> None:
         async with self._lock:
             self._cancel_auto_reveal()
             with SessionLocal() as db:
+                # Commit the new session row first: committing expires every
+                # object already loaded in this Session, so the questions
+                # must be queried afterwards or they'd be unusable once this
+                # `with` block closes and detaches them.
+                session_row = GameSession(
+                    label=label or f"Session du {datetime.now().strftime('%d/%m %H:%M')}"
+                )
+                db.add(session_row)
+                db.commit()
+                db.refresh(session_row)
+
                 questions = (
                     db.execute(
                         select(Question)
@@ -69,7 +82,7 @@ class QuizEngine:
                     .scalars()
                     .all()
                 )
-            self.state = GameState(questions=list(questions))
+            self.state = GameState(session_id=session_row.id, questions=list(questions))
         await self._broadcast_state()
 
     async def add_player(self, nickname: str, guest_id: str | None) -> str:
@@ -79,7 +92,15 @@ class QuizEngine:
                 id=player_id, nickname=nickname, guest_id=guest_id
             )
             with SessionLocal() as db:
-                db.add(GamePlayer(id=player_id, nickname=nickname, guest_id=guest_id, score=0))
+                db.add(
+                    GamePlayer(
+                        id=player_id,
+                        session_id=self.state.session_id,
+                        nickname=nickname,
+                        guest_id=guest_id,
+                        score=0,
+                    )
+                )
                 db.commit()
         await self._broadcast_state()
         return player_id
@@ -116,6 +137,7 @@ class QuizEngine:
                 self.state.question_index += 1
                 if self.state.question_index >= len(self.state.questions):
                     self.state.phase = Phase.finished
+                    self._mark_session_ended()
                 else:
                     self._begin_question()
             elif self.state.phase == Phase.question:
@@ -139,6 +161,15 @@ class QuizEngine:
 
     def _reveal(self) -> None:
         self.state.phase = Phase.reveal
+
+    def _mark_session_ended(self) -> None:
+        if not self.state.session_id:
+            return
+        with SessionLocal() as db:
+            session_row = db.get(GameSession, self.state.session_id)
+            if session_row is not None:
+                session_row.ended_at = datetime.utcnow()
+                db.commit()
 
     def _cancel_auto_reveal(self) -> None:
         task = self.state.auto_reveal_task

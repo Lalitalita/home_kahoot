@@ -18,11 +18,11 @@ export default function Join() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-party-950">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-ink-950 via-ink-900 to-party-950">
       <div className="card w-full max-w-sm space-y-5 text-center">
         <div className="text-5xl">🎮</div>
         <h1 className="text-2xl font-bold text-white">Rejoindre le quiz</h1>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-ink-400">
           Choisis un pseudo pour le grand quiz de la soirée. Regarde l'écran principal pour suivre
           les questions !
         </p>

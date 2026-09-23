@@ -39,8 +39,8 @@ export default function AdminDashboard() {
         }`}
       >
         <div>
-          <h2 className="font-semibold text-stone-900">Mode soirée</h2>
-          <p className="text-sm text-stone-500">
+          <h2 className="font-semibold text-ink-50">Mode soirée</h2>
+          <p className="text-sm text-ink-400">
             {partyMode === null ? "..." : partyMode ? "Activé" : "Désactivé"}
           </p>
         </div>
@@ -75,8 +75,8 @@ export default function AdminDashboard() {
 function StatCard({ label, value, to, highlight }) {
   return (
     <Link to={to} className={`card hover:border-party-300 transition ${highlight ? "border-amber-400" : ""}`}>
-      <div className="text-2xl font-semibold text-stone-900">{value}</div>
-      <div className="text-sm text-stone-500 mt-1">{label}</div>
+      <div className="text-2xl font-semibold text-ink-50">{value}</div>
+      <div className="text-sm text-ink-400 mt-1">{label}</div>
     </Link>
   );
 }

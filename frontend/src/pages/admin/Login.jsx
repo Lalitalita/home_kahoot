@@ -69,7 +69,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card w-full max-w-sm space-y-5">
         <div className="text-center space-y-1">
-          <h1 className="text-xl font-semibold text-stone-900">Administration</h1>
+          <h1 className="text-xl font-semibold text-ink-50">Administration</h1>
         </div>
 
         {step === "credentials" && (
@@ -101,7 +101,7 @@ export default function AdminLogin() {
 
         {step === "setup2fa" && (
           <form onSubmit={handleConfirmSetup} className="space-y-4">
-            <p className="text-sm text-stone-500">
+            <p className="text-sm text-ink-400">
               Première connexion : scanne ce QR code avec Google Authenticator, Authy ou une app
               équivalente pour activer la double authentification.
             </p>
@@ -129,7 +129,7 @@ export default function AdminLogin() {
 
         {step === "verify2fa" && (
           <form onSubmit={handleVerify} className="space-y-4">
-            <p className="text-sm text-stone-500">
+            <p className="text-sm text-ink-400">
               Entre le code généré par ton application d'authentification.
             </p>
             <input
