@@ -9,8 +9,8 @@ const links = [
 
 export default function NavBar() {
   return (
-    <nav className="sticky top-0 z-40 bg-ink-950/90 backdrop-blur-sm border-b border-ink-700">
-      <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto">
+    <nav className="sticky top-0 z-40 bg-ink-900/90 backdrop-blur-sm border-b border-ink-700">
+      <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
         <span className="text-lg mr-2 shrink-0">🎂</span>
         {links.map((l) => (
           <NavLink

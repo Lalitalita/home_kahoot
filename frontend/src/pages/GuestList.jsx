@@ -41,11 +41,11 @@ export default function GuestList() {
               <div>
                 <h3 className="font-semibold text-ink-50">
                   {g.name}
-                  {g.pseudo && <span className="text-party-600 font-normal"> ({g.pseudo})</span>}
+                  {g.pseudo && <span className="text-party-400 font-normal"> ({g.pseudo})</span>}
                 </h3>
                 {g.description && <p className="text-sm text-ink-400 mt-1">{g.description}</p>}
                 {g.bringing_item && (
-                  <p className="text-sm text-party-700 mt-1">Amène : {g.bringing_item}</p>
+                  <p className="text-sm text-party-400 mt-1">Amène : {g.bringing_item}</p>
                 )}
               </div>
             </div>

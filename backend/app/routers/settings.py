@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, AppSettings
 from app.quiz_engine import engine
 from app.schemas import AppSettingsPublic
@@ -35,7 +35,7 @@ class PartyModeUpdate(BaseModel):
 async def set_party_mode(
     payload: PartyModeUpdate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("party")),
 ):
     settings_row = _get_or_create_settings(db)
     settings_row.party_mode_active = payload.active

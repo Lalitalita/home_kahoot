@@ -90,7 +90,7 @@ export default function GuestProfile() {
                 {guest.description && (
                   <p className="text-sm text-ink-400">{guest.description}</p>
                 )}
-                <label className="text-xs text-party-600 cursor-pointer mt-1 inline-block">
+                <label className="text-xs text-party-400 cursor-pointer mt-1 inline-block">
                   Changer la photo
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
                 </label>

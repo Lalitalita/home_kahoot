@@ -6,12 +6,18 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(getToken());
-  const [username, setUsername] = useState(null);
+  const [me, setMe] = useState(null);
   const [checking, setChecking] = useState(true);
 
   const applyToken = useCallback((newToken) => {
     persistToken(newToken);
     setTokenState(newToken);
+  }, []);
+
+  const refreshMe = useCallback(async () => {
+    const fresh = await api.get("/api/auth/me", { auth: true });
+    setMe(fresh);
+    return fresh;
   }, []);
 
   useEffect(() => {
@@ -22,8 +28,8 @@ export function AuthProvider({ children }) {
         return;
       }
       try {
-        const me = await api.get("/api/auth/me", { auth: true });
-        if (!cancelled) setUsername(me.username);
+        const fresh = await api.get("/api/auth/me", { auth: true });
+        if (!cancelled) setMe(fresh);
       } catch {
         if (!cancelled) applyToken(null);
       } finally {
@@ -38,12 +44,31 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     applyToken(null);
-    setUsername(null);
+    setMe(null);
   }, [applyToken]);
+
+  const isOwner = me?.role === "owner";
+  const permissions = me?.permissions || [];
+
+  function hasPermission(section) {
+    return isOwner || permissions.includes(section);
+  }
 
   return (
     <AuthContext.Provider
-      value={{ token, username, isAuthenticated: !!token, checking, setToken: applyToken, logout }}
+      value={{
+        token,
+        me,
+        username: me?.username || null,
+        isOwner,
+        permissions,
+        hasPermission,
+        isAuthenticated: !!token,
+        checking,
+        setToken: applyToken,
+        refreshMe,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

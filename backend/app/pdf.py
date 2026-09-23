@@ -14,9 +14,12 @@ from reportlab.platypus import (
 
 from app.schemas import GameSessionDetail, PlayerResult
 
-TERRACOTTA = colors.HexColor("#b1602f")
-INK = colors.HexColor("#2a2119")
-MUTED = colors.HexColor("#6b5c4d")
+CYAN = colors.HexColor("#0fa3a3")
+CYAN_TINT = colors.HexColor("#eafefe")
+MAGENTA = colors.HexColor("#7f18a0")
+INK = colors.HexColor("#181818")
+MUTED = colors.HexColor("#5c5c5c")
+BORDER = colors.HexColor("#d9d9d9")
 GREEN = colors.HexColor("#15803d")
 RED = colors.HexColor("#b91c1c")
 
@@ -32,7 +35,7 @@ _question_style = ParagraphStyle(
 )
 _answer_style = ParagraphStyle("RecapAnswer", parent=_styles["Normal"], fontSize=10, textColor=INK)
 _section_style = ParagraphStyle(
-    "RecapSection", parent=_styles["Heading2"], textColor=TERRACOTTA, spaceBefore=18, spaceAfter=8
+    "RecapSection", parent=_styles["Heading2"], textColor=MAGENTA, spaceBefore=18, spaceAfter=8
 )
 
 
@@ -40,13 +43,21 @@ def _player_answers_table(player: PlayerResult) -> Table:
     header = ["#", "Question", "Réponse donnée", "Bonne réponse", "Points"]
     rows = [header]
     for i, a in enumerate(player.answers, start=1):
-        given = a.choices[a.choice_index] if 0 <= a.choice_index < len(a.choices) else "—"
         correct = a.choices[a.correct_index]
+        if not a.answered:
+            given = "Pas de réponse"
+            given_color = MUTED
+        elif a.choice_index is not None and 0 <= a.choice_index < len(a.choices):
+            given = a.choices[a.choice_index]
+            given_color = GREEN if a.is_correct else RED
+        else:
+            given = "—"
+            given_color = MUTED
         rows.append(
             [
                 str(i),
                 Paragraph(a.question_text, _answer_style),
-                Paragraph(given, ParagraphStyle("given", parent=_answer_style, textColor=GREEN if a.is_correct else RED)),
+                Paragraph(given, ParagraphStyle("given", parent=_answer_style, textColor=given_color)),
                 Paragraph(correct, _answer_style),
                 str(a.points),
             ]
@@ -56,13 +67,13 @@ def _player_answers_table(player: PlayerResult) -> Table:
     table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), TERRACOTTA),
+                ("BACKGROUND", (0, 0), (-1, 0), CYAN),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, -1), 9),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f0e8")]),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e0d5c5")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, CYAN_TINT]),
+                ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
@@ -116,12 +127,12 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
     ranking_table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), TERRACOTTA),
+                ("BACKGROUND", (0, 0), (-1, 0), CYAN),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f6f0e8")]),
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#e0d5c5")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, CYAN_TINT]),
+                ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]

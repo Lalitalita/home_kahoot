@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, Guest, Message
 from app.schemas import MessageCreate, MessagePublic
 from app.uploads import save_upload
@@ -74,7 +74,7 @@ async def create_message_with_photo(
 
 @router.delete("/admin/messages/{message_id}")
 def delete_message_admin(
-    message_id: str, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    message_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("messages"))
 ):
     message = db.get(Message, message_id)
     if message is None:

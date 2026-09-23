@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, AppSettings, ScheduleItem
 from app.schemas import (
     DayScheduleSettings,
@@ -26,7 +26,7 @@ def _get_or_create_settings(db: Session) -> AppSettings:
 
 
 @router.get("/day-start", response_model=DayScheduleSettings)
-def get_day_start(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def get_day_start(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("planning"))):
     return _get_or_create_settings(db)
 
 
@@ -34,7 +34,7 @@ def get_day_start(db: Session = Depends(get_db), admin: Admin = Depends(get_curr
 def set_day_start(
     payload: DayStartUpdate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("planning")),
 ):
     settings_row = _get_or_create_settings(db)
     settings_row.day_start_time = payload.day_start_time
@@ -44,7 +44,7 @@ def set_day_start(
 
 
 @router.get("/items", response_model=list[ScheduleItemAdmin])
-def list_items(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def list_items(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("planning"))):
     return db.query(ScheduleItem).order_by(ScheduleItem.order_index).all()
 
 
@@ -52,7 +52,7 @@ def list_items(db: Session = Depends(get_db), admin: Admin = Depends(get_current
 def create_item(
     payload: ScheduleItemCreate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("planning")),
 ):
     max_order = db.query(ScheduleItem).count()
     item = ScheduleItem(**payload.model_dump(), order_index=max_order)
@@ -67,7 +67,7 @@ def update_item(
     item_id: str,
     payload: ScheduleItemUpdate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("planning")),
 ):
     item = db.get(ScheduleItem, item_id)
     if item is None:
@@ -84,7 +84,7 @@ def move_item(
     item_id: str,
     direction: str,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("planning")),
 ):
     if direction not in ("up", "down"):
         raise HTTPException(status_code=400, detail="direction doit être 'up' ou 'down'")
@@ -107,7 +107,7 @@ def move_item(
 
 @router.delete("/items/{item_id}")
 def delete_item(
-    item_id: str, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    item_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("planning"))
 ):
     item = db.get(ScheduleItem, item_id)
     if item is None:

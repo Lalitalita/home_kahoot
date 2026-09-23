@@ -1,7 +1,7 @@
 import io
 
 import qrcode
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -9,9 +9,14 @@ from app.database import get_db
 from app.deps import get_current_admin
 from app.models import Admin
 from app.schemas import (
+    AdminMe,
+    ChangePasswordRequest,
+    Confirm2FAResetRequest,
     Confirm2FASetupRequest,
     LoginRequest,
     LoginResponse,
+    Start2FAResetRequest,
+    Start2FAResetResponse,
     TokenResponse,
     Verify2FARequest,
 )
@@ -19,13 +24,26 @@ from app.security import (
     create_access_token,
     create_challenge_token,
     decode_token,
+    hash_password,
     new_totp_secret,
     totp_provisioning_uri,
     verify_password,
     verify_totp_code,
 )
+from app.uploads import save_upload
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+def _admin_to_me(admin: Admin) -> AdminMe:
+    return AdminMe(
+        id=admin.id,
+        username=admin.username,
+        role=admin.role,
+        permissions=[p for p in (admin.permissions or "").split(",") if p],
+        photo_url=admin.photo_url,
+        totp_enabled=admin.totp_enabled,
+    )
 
 
 def _decode_challenge(token: str, purpose: str, db: Session) -> Admin:
@@ -93,6 +111,73 @@ def verify_2fa(payload: Verify2FARequest, db: Session = Depends(get_db)):
     return TokenResponse(access_token=create_access_token(admin.id))
 
 
-@router.get("/me")
+@router.get("/me", response_model=AdminMe)
 def me(admin: Admin = Depends(get_current_admin)):
-    return {"username": admin.username}
+    return _admin_to_me(admin)
+
+
+@router.patch("/me/password", response_model=AdminMe)
+def change_my_password(
+    payload: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    if not verify_password(payload.current_password, admin.password_hash):
+        raise HTTPException(status_code=401, detail="Mot de passe actuel incorrect")
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Le nouveau mot de passe est trop court (8 caractères min.)")
+
+    admin.password_hash = hash_password(payload.new_password)
+    db.commit()
+    return _admin_to_me(admin)
+
+
+@router.post("/me/2fa/start", response_model=Start2FAResetResponse)
+def start_my_2fa_reset(
+    payload: Start2FAResetRequest,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    if not verify_password(payload.current_password, admin.password_hash):
+        raise HTTPException(status_code=401, detail="Mot de passe actuel incorrect")
+
+    admin.totp_secret = new_totp_secret()
+    admin.totp_enabled = False
+    db.commit()
+    return Start2FAResetResponse(
+        provisioning_uri=totp_provisioning_uri(admin.totp_secret, admin.username)
+    )
+
+
+@router.get("/me/2fa-qr")
+def my_2fa_qr(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+    if not admin.totp_secret:
+        raise HTTPException(status_code=400, detail="Lance d'abord la réinitialisation de la 2FA")
+    uri = totp_provisioning_uri(admin.totp_secret, admin.username)
+    img = qrcode.make(uri)
+    buffer = io.BytesIO()
+    img.save(buffer, format="PNG")
+    buffer.seek(0)
+    return StreamingResponse(buffer, media_type="image/png")
+
+
+@router.post("/me/2fa/confirm", response_model=AdminMe)
+def confirm_my_2fa_reset(
+    payload: Confirm2FAResetRequest,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(get_current_admin),
+):
+    if not admin.totp_secret or not verify_totp_code(admin.totp_secret, payload.code):
+        raise HTTPException(status_code=401, detail="Code incorrect")
+    admin.totp_enabled = True
+    db.commit()
+    return _admin_to_me(admin)
+
+
+@router.post("/me/photo", response_model=AdminMe)
+async def upload_my_photo(
+    file: UploadFile, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+):
+    admin.photo_url = await save_upload(file, "admins")
+    db.commit()
+    return _admin_to_me(admin)

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -9,10 +10,14 @@ from sqlalchemy import select
 
 from app.config import get_settings
 from app.database import SessionLocal
+from app.email_sender import send_recap_email
 from app.models import GameAnswer, GamePlayer, GameSession, Question, QuestionStatus
+from app.pdf import build_player_recap_pdf
+from app.recap import build_player_result
 from app.ws_manager import manager
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 class Phase(str, Enum):
@@ -28,6 +33,7 @@ class PlayerState:
     id: str
     nickname: str
     guest_id: str | None = None
+    email: str | None = None
     score: int = 0
     streak: int = 0
     answered_this_round: bool = False
@@ -44,6 +50,10 @@ class GameState:
     # choice_index counts for the currently shown question, for the live bar chart
     answer_counts: dict[int, int] = field(default_factory=lambda: {0: 0, 1: 0, 2: 0, 3: 0})
     auto_reveal_task: asyncio.Task | None = None
+    # Ids of questions actually shown so far this session, in order — lets
+    # recaps include ones a player skipped without assuming every accepted
+    # question loaded at reset time was necessarily reached.
+    presented_question_ids: list[str] = field(default_factory=list)
 
 
 class QuizEngine:
@@ -85,11 +95,13 @@ class QuizEngine:
             self.state = GameState(session_id=session_row.id, questions=list(questions))
         await self._broadcast_state()
 
-    async def add_player(self, nickname: str, guest_id: str | None) -> str:
+    async def add_player(
+        self, nickname: str, guest_id: str | None, email: str | None = None
+    ) -> str:
         async with self._lock:
             player_id = str(uuid.uuid4())
             self.state.players[player_id] = PlayerState(
-                id=player_id, nickname=nickname, guest_id=guest_id
+                id=player_id, nickname=nickname, guest_id=guest_id, email=email
             )
             with SessionLocal() as db:
                 db.add(
@@ -98,6 +110,7 @@ class QuizEngine:
                         session_id=self.state.session_id,
                         nickname=nickname,
                         guest_id=guest_id,
+                        email=email,
                         score=0,
                     )
                 )
@@ -130,6 +143,7 @@ class QuizEngine:
     async def advance(self) -> None:
         """Move the game forward one step: lobby/reveal -> next question,
         question -> reveal, leaderboard -> next question or finished."""
+        just_finished = False
         async with self._lock:
             self._cancel_auto_reveal()
 
@@ -138,6 +152,7 @@ class QuizEngine:
                 if self.state.question_index >= len(self.state.questions):
                     self.state.phase = Phase.finished
                     self._mark_session_ended()
+                    just_finished = True
                 else:
                     self._begin_question()
             elif self.state.phase == Phase.question:
@@ -151,6 +166,8 @@ class QuizEngine:
 
         if self.state.phase == Phase.question:
             self._schedule_auto_reveal()
+        if just_finished:
+            asyncio.create_task(self._send_recap_emails())
 
     def _begin_question(self) -> None:
         self.state.phase = Phase.question
@@ -158,6 +175,20 @@ class QuizEngine:
         self.state.answer_counts = {0: 0, 1: 0, 2: 0, 3: 0}
         for p in self.state.players.values():
             p.answered_this_round = False
+
+        question = self.current_question()
+        if question is not None:
+            self.state.presented_question_ids.append(question.id)
+            self._persist_presented_questions()
+
+    def _persist_presented_questions(self) -> None:
+        if not self.state.session_id:
+            return
+        with SessionLocal() as db:
+            session_row = db.get(GameSession, self.state.session_id)
+            if session_row is not None:
+                session_row.question_ids = ",".join(self.state.presented_question_ids)
+                db.commit()
 
     def _reveal(self) -> None:
         self.state.phase = Phase.reveal
@@ -170,6 +201,32 @@ class QuizEngine:
             if session_row is not None:
                 session_row.ended_at = datetime.utcnow()
                 db.commit()
+
+    async def _send_recap_emails(self) -> None:
+        """Background task: mail each player who gave an email their PDF
+        recap. Runs after the finished-state broadcast so it never delays
+        the TV/controller UI, and never raises into the caller."""
+        players_with_email = [p for p in self.state.players.values() if p.email]
+        for player in players_with_email:
+            try:
+                with SessionLocal() as db:
+                    db_player = db.get(GamePlayer, player.id)
+                    if db_player is None or not db_player.email:
+                        continue
+                    result = build_player_result(db, db_player)
+                    pdf_bytes = build_player_recap_pdf(result, party_title=settings.app_name)
+                    sent = await asyncio.to_thread(
+                        send_recap_email,
+                        db_player.email,
+                        db_player.nickname,
+                        pdf_bytes,
+                        settings.app_name,
+                    )
+                    if sent:
+                        db_player.recap_emailed_at = datetime.utcnow()
+                        db.commit()
+            except Exception:
+                logger.exception("Échec de l'envoi du récap à %s", player.email)
 
     def _cancel_auto_reveal(self) -> None:
         task = self.state.auto_reveal_task

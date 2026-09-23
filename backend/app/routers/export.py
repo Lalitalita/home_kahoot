@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, Guest, Question
 
 router = APIRouter(prefix="/api/admin/export", tags=["export"])
@@ -26,7 +26,7 @@ def _csv_response(rows: list[list[str]], header: list[str], filename: str) -> St
 
 
 @router.get("/guests.csv")
-def export_guests(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def export_guests(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("guests"))):
     guests = db.query(Guest).order_by(Guest.name).all()
     rows = [
         [g.name, g.pseudo or "", g.description or "", g.bringing_item or "", g.access_code]
@@ -38,7 +38,7 @@ def export_guests(db: Session = Depends(get_db), admin: Admin = Depends(get_curr
 
 
 @router.get("/allergies.csv")
-def export_allergies(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def export_allergies(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("guests"))):
     guests = db.query(Guest).order_by(Guest.name).all()
     rows = [
         [g.name, g.allergies or "", g.diet or "", g.intolerances or "", g.dietary_comment or ""]
@@ -52,7 +52,7 @@ def export_allergies(db: Session = Depends(get_db), admin: Admin = Depends(get_c
 
 
 @router.get("/questions.csv")
-def export_questions(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def export_questions(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("questions"))):
     questions = db.query(Question).order_by(Question.created_at).all()
     rows = [
         [
