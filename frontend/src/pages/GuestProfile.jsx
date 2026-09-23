@@ -11,6 +11,7 @@ export default function GuestProfile() {
   const [guest, setGuest] = useState(null);
   const [form, setForm] = useState({
     pseudo: "",
+    email: "",
     bringing_item: "",
     allergies: "",
     diet: "",
@@ -32,6 +33,7 @@ export default function GuestProfile() {
         setGuest(g);
         setForm({
           pseudo: g.pseudo || "",
+          email: g.email || "",
           bringing_item: g.bringing_item || "",
           allergies: g.allergies || "",
           diet: g.diet || "",
@@ -92,7 +94,7 @@ export default function GuestProfile() {
                   "🙂"
                 )}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h1 className="text-xl font-semibold text-ink-50">{guest.name}</h1>
                 {guest.description && (
                   <p className="text-sm text-ink-400">{guest.description}</p>
@@ -101,6 +103,13 @@ export default function GuestProfile() {
                   Changer la photo
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
                 </label>
+                <input
+                  type="email"
+                  className="input text-sm py-1.5 mt-2"
+                  placeholder="Ton email (facultatif)"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
               </div>
             </div>
 

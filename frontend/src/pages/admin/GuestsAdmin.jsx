@@ -13,9 +13,38 @@ function hasContent(value) {
   return normalized !== "" && !NON_ANSWERS.includes(normalized);
 }
 
-function DietCell({ value }) {
-  if (!hasContent(value)) return <span className="text-ink-500">{value || "-"}</span>;
-  return <span className="text-amber-400 font-medium">{value}</span>;
+function EditableDietCell({ value, onSave }) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal] = useState(value);
+
+  if (!editing) {
+    return (
+      <span
+        className={`cursor-pointer hover:underline ${
+          hasContent(value) ? "text-amber-400 font-medium" : "text-ink-500"
+        }`}
+        onClick={() => setEditing(true)}
+      >
+        {value || "-"}
+      </span>
+    );
+  }
+
+  return (
+    <input
+      autoFocus
+      className="input py-1 px-2 text-sm"
+      value={val}
+      onChange={(e) => setVal(e.target.value)}
+      onBlur={() => {
+        setEditing(false);
+        if (val !== value) onSave(val);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.target.blur();
+      }}
+    />
+  );
 }
 
 export default function AdminGuests() {
@@ -173,15 +202,26 @@ export default function AdminGuests() {
                 {showDiet && (
                   <>
                     <td className="p-3">
-                      <DietCell value={g.allergies} />
+                      <EditableDietCell
+                        value={g.allergies || ""}
+                        onSave={(v) => handleUpdate(g, "allergies", v)}
+                      />
                     </td>
                     <td className="p-3">
-                      <DietCell value={g.diet} />
+                      <EditableDietCell value={g.diet || ""} onSave={(v) => handleUpdate(g, "diet", v)} />
                     </td>
                     <td className="p-3">
-                      <DietCell value={g.intolerances} />
+                      <EditableDietCell
+                        value={g.intolerances || ""}
+                        onSave={(v) => handleUpdate(g, "intolerances", v)}
+                      />
                     </td>
-                    <td className="p-3 text-ink-400 max-w-[12rem]">{g.dietary_comment || "-"}</td>
+                    <td className="p-3 max-w-[12rem]">
+                      <EditableCell
+                        value={g.dietary_comment || ""}
+                        onSave={(v) => handleUpdate(g, "dietary_comment", v)}
+                      />
+                    </td>
                   </>
                 )}
                 <td className="p-3">

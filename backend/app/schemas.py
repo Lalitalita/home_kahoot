@@ -119,6 +119,7 @@ class GuestSelf(BaseModel):
     pseudo: str | None
     photo_url: str | None
     description: str | None
+    email: str | None
     allergies: str | None
     diet: str | None
     intolerances: str | None
@@ -128,6 +129,7 @@ class GuestSelf(BaseModel):
 
 class GuestSelfUpdate(BaseModel):
     pseudo: str | None = None
+    email: str | None = None
     allergies: str | None = None
     diet: str | None = None
     intolerances: str | None = None
@@ -137,8 +139,6 @@ class GuestSelfUpdate(BaseModel):
 
 class GuestAdmin(GuestSelf):
     access_code: str
-    # Admin-only — never exposed on GuestSelf/GuestPublic, kept as a surprise.
-    email: str | None
     created_at: datetime
 
 
