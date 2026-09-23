@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, Guest, Question, QuestionStatus
 from app.schemas import QuestionAdmin, QuestionCreate, QuestionPublic, QuestionUpdateAdmin
 from app.uploads import save_upload
@@ -78,7 +78,7 @@ async def upload_question_image(
 
 @router.get("/admin/questions", response_model=list[QuestionAdmin])
 def list_questions_admin(
-    db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    db: Session = Depends(get_db), admin: Admin = Depends(require_permission("questions"))
 ):
     return db.query(Question).order_by(Question.order_index, Question.created_at).all()
 
@@ -87,7 +87,7 @@ def list_questions_admin(
 def create_question_admin(
     payload: QuestionCreate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("questions")),
 ):
     if not (0 <= payload.correct_index <= 3):
         raise HTTPException(status_code=400, detail="Index de réponse invalide")
@@ -111,7 +111,7 @@ def update_question_admin(
     question_id: str,
     payload: QuestionUpdateAdmin,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("questions")),
 ):
     question = db.get(Question, question_id)
     if question is None:
@@ -132,7 +132,7 @@ async def upload_question_image_admin(
     question_id: str,
     file: UploadFile,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("questions")),
 ):
     question = db.get(Question, question_id)
     if question is None:
@@ -145,7 +145,7 @@ async def upload_question_image_admin(
 
 @router.delete("/admin/questions/{question_id}")
 def delete_question_admin(
-    question_id: str, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    question_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("questions"))
 ):
     question = db.get(Question, question_id)
     if question is None:

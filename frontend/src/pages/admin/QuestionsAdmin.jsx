@@ -162,7 +162,7 @@ export default function AdminQuestions() {
                 {q.image_url && (
                   <img src={q.image_url} alt="" className="mt-3 max-h-40 rounded-lg" />
                 )}
-                <label className="text-xs text-party-600 cursor-pointer mt-2 inline-block">
+                <label className="text-xs text-party-400 cursor-pointer mt-2 inline-block">
                   {q.image_url ? "Changer l'image" : "Ajouter une image"}
                   <input
                     type="file"

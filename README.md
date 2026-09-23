@@ -33,7 +33,9 @@ messages en bonus.
 - Réponses envoyées en temps réel via WebSocket
 - Score basé sur la bonne réponse **et** la rapidité
 - Classement en direct + podium top 3 animé en fin de partie
-- Chaque invité peut télécharger son récap personnel en PDF (ses réponses vs. les bonnes)
+- Barre de progression (question X / N) sur l'écran TV et sur le téléphone de chaque invité
+- Chaque invité peut laisser son email en rejoignant pour recevoir son récap par email à la fin,
+  et peut aussi le télécharger en PDF (ses réponses vs. les bonnes, y compris celles sans réponse)
 
 **Après la soirée (ou après un essai)**
 - Chaque lancement du quiz crée une **session** séparée : tu peux faire plusieurs essais
@@ -42,9 +44,15 @@ messages en bonus.
   consultable directement dans l'interface
 - Export CSV ou PDF des résultats complets d'une session
 
-**Sécurité admin**
+**Comptes admin & sécurité**
 - Authentification par mot de passe + **double authentification (TOTP/2FA)** obligatoire dès la première connexion (compatible Google Authenticator, Aegis, Authy, etc.)
 - Toutes les routes d'administration et de modération sont protégées par un jeton (JWT)
+- Le compte principal ("owner") peut créer d'autres comptes admin (ex : ton copain, ta
+  meilleure amie) depuis Admin → Comptes. Chaque compte créé devient aussi un invité
+  automatiquement, et tu choisis précisément à quelles sections il a accès (invités, budget,
+  planning, questions, messages, mode soirée, résultats)
+- Chaque admin peut changer son propre mot de passe et réinitialiser sa 2FA depuis
+  Admin → Mon compte, sans passer par la ligne de commande
 
 ## Architecture
 

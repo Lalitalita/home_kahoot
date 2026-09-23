@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Confetti from "../../components/Confetti.jsx";
+import QuizProgress from "../../components/QuizProgress.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
 
@@ -22,9 +23,11 @@ export default function Controller() {
     }
 
     const code = localStorage.getItem("guest_access_code") || "";
+    const email = localStorage.getItem("player_email") || "";
     const existingPlayerId = localStorage.getItem("player_id") || "";
     const params = new URLSearchParams({ nickname });
     if (code) params.set("guest_code", code);
+    if (email) params.set("email", email);
     if (existingPlayerId) params.set("player_id", existingPlayerId);
 
     const ws = new WebSocket(wsUrl(`/ws/player?${params.toString()}`));
@@ -62,13 +65,21 @@ export default function Controller() {
   const myScore = myRank >= 0 ? state.leaderboard[myRank].score : 0;
 
   return (
-    <div className="min-h-screen flex flex-col p-4 bg-ink-950">
+    <div className="min-h-screen flex flex-col p-4 bg-ink-900">
       <div className="flex items-center justify-between mb-4">
         <span className="text-white font-semibold">👤 {nickname}</span>
         <span className={`text-xs ${connected ? "text-green-400" : "text-red-400"}`}>
           {connected ? "Connecté" : "Reconnexion..."}
         </span>
       </div>
+
+      {state?.total_questions > 0 && phase !== "lobby" && phase !== "finished" && (
+        <QuizProgress
+          current={Math.min(state.question_index + 1, state.total_questions)}
+          total={state.total_questions}
+          className="mb-4"
+        />
+      )}
 
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         {!state || phase === "lobby" ? (
@@ -144,6 +155,9 @@ function FinalResult({ playerId, state }) {
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}
       </p>
       <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
+      {localStorage.getItem("player_email") && (
+        <p className="text-party-400 text-sm">Ton récap va aussi t'être envoyé par email 📧</p>
+      )}
       {playerId && (
         <a
           href={`/api/players/${playerId}/recap.pdf`}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import Confetti from "../../components/Confetti.jsx";
+import QuizProgress from "../../components/QuizProgress.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
 
@@ -105,9 +106,11 @@ function QuestionView({ state }) {
   const q = state.question;
   return (
     <div className="flex-1 flex flex-col">
-      <div className="text-center text-ink-400 mb-2">
-        Question {state.question_index + 1} / {state.total_questions}
-      </div>
+      <QuizProgress
+        current={state.question_index + 1}
+        total={state.total_questions}
+        className="max-w-4xl mx-auto w-full mb-3"
+      />
       <Timer startedAt={q.started_at} durationSeconds={q.time_limit_seconds} />
       <div className="flex-1 flex flex-col items-center justify-center gap-6 py-6">
         <h2 className="font-display text-4xl font-bold text-center max-w-4xl">{q.text}</h2>
@@ -137,6 +140,7 @@ function RevealView({ state }) {
 
   return (
     <div className="flex-1 flex flex-col justify-center gap-6 max-w-4xl mx-auto w-full">
+      <QuizProgress current={state.question_index + 1} total={state.total_questions} />
       <h2 className="font-display text-3xl font-bold text-center">{q.text}</h2>
       <div className="space-y-3">
         {q.choices.map((choice, i) => {

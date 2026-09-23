@@ -16,6 +16,17 @@
   .font-serif {
     font-family: "Fraunces", ui-serif, Georgia, serif;
   }
+
+  /* Scrollable nav pill rows keep working with touch/drag but never show
+     the native scrollbar track (which otherwise renders as an ugly bar
+     right under the nav on any viewport narrower than the link list). */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @layer components {
@@ -23,7 +34,8 @@
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-medium transition active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-party-500 text-white shadow-glow hover:bg-party-400;
+    /* Dark text on the bright cyan reads far better than white here. */
+    @apply btn bg-party-400 text-ink-900 shadow-glow hover:bg-party-300;
   }
   .btn-secondary {
     @apply btn bg-ink-800 text-ink-100 border border-ink-600 hover:bg-ink-700;
@@ -32,7 +44,7 @@
     @apply btn bg-rose-700 text-white hover:bg-rose-600;
   }
   .card {
-    @apply rounded-2xl bg-ink-900 border border-ink-700 shadow-cozy p-5;
+    @apply rounded-2xl bg-ink-850 border border-ink-700 shadow-cozy p-5;
   }
   .input {
     @apply w-full rounded-lg bg-ink-800 border border-ink-600 px-4 py-2.5 text-ink-50 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-party-400/60 focus:border-party-400;

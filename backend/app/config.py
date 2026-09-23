@@ -26,6 +26,20 @@ class Settings(BaseSettings):
     max_points_per_question: int = 1000
     min_points_for_correct_answer: int = 100
 
+    # SMTP (recap emails). Left empty, sending is silently skipped — fill
+    # these in .env to enable it. OVH typically uses ssl0.ovh.net:465 (SSL).
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_ssl: bool = True
+    smtp_from_email: str = "contact@amonita.fr"
+    smtp_from_name: str = "Anniv Lana"
+
+    @property
+    def smtp_configured(self) -> bool:
+        return bool(self.smtp_host and self.smtp_username and self.smtp_password)
+
     @property
     def cors_origin_list(self) -> list[str]:
         if self.cors_origins.strip() == "*":

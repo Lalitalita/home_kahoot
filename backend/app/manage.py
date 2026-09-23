@@ -16,7 +16,7 @@ import argparse
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine
-from app.models import Admin
+from app.models import Admin, AdminRole
 from app.security import hash_password
 
 
@@ -25,7 +25,13 @@ def reset_admin(username: str, password: str) -> None:
     with SessionLocal() as db:
         admin = db.query(Admin).filter(Admin.username == username).first()
         if admin is None:
-            admin = Admin(username=username, password_hash=hash_password(password))
+            # Only reached when there's no admin at all yet, so this is
+            # necessarily the owner account being recovered/bootstrapped.
+            admin = Admin(
+                username=username,
+                password_hash=hash_password(password),
+                role=AdminRole.owner,
+            )
             db.add(admin)
             db.commit()
             print(f"Compte admin '{username}' créé avec le nouveau mot de passe.")

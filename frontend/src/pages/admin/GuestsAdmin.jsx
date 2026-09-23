@@ -5,6 +5,19 @@ import AdminLayout from "../../components/AdminLayout.jsx";
 
 const emptyForm = { name: "", pseudo: "", description: "" };
 
+const NON_ANSWERS = ["aucune", "aucun", "non", "rien"];
+
+function hasContent(value) {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized !== "" && !NON_ANSWERS.includes(normalized);
+}
+
+function DietCell({ value }) {
+  if (!hasContent(value)) return <span className="text-ink-500">{value || "-"}</span>;
+  return <span className="text-amber-400 font-medium">{value}</span>;
+}
+
 export default function AdminGuests() {
   const [guests, setGuests] = useState([]);
   const [form, setForm] = useState(emptyForm);
@@ -38,6 +51,13 @@ export default function AdminGuests() {
   async function handleDelete(id) {
     if (!confirm("Supprimer cet invité ?")) return;
     await api.delete(`/api/admin/guests/${id}`, { auth: true });
+    load();
+  }
+
+  async function handlePhoto(guest, file) {
+    const body = new FormData();
+    body.append("file", file);
+    await api.post(`/api/admin/guests/${guest.id}/photo`, body, { isForm: true, auth: true });
     load();
   }
 
@@ -90,6 +110,7 @@ export default function AdminGuests() {
         <table className="w-full text-sm">
           <thead className="text-left text-ink-500 border-b border-ink-700">
             <tr>
+              <th className="p-3">Photo</th>
               <th className="p-3">Nom</th>
               <th className="p-3">Pseudo</th>
               <th className="p-3">Description</th>
@@ -110,6 +131,21 @@ export default function AdminGuests() {
             {guests.map((g) => (
               <tr key={g.id} className="border-b border-ink-800">
                 <td className="p-3">
+                  <label className="block w-10 h-10 rounded-full overflow-hidden bg-ink-800 cursor-pointer shrink-0 flex items-center justify-center text-lg">
+                    {g.photo_url ? (
+                      <img src={g.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      "🙂"
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handlePhoto(g, e.target.files[0])}
+                    />
+                  </label>
+                </td>
+                <td className="p-3">
                   <EditableCell value={g.name} onSave={(v) => handleUpdate(g, "name", v)} />
                 </td>
                 <td className="p-3">
@@ -129,9 +165,15 @@ export default function AdminGuests() {
                 </td>
                 {showDiet && (
                   <>
-                    <td className="p-3 text-amber-600">{g.allergies || "-"}</td>
-                    <td className="p-3">{g.diet || "-"}</td>
-                    <td className="p-3">{g.intolerances || "-"}</td>
+                    <td className="p-3">
+                      <DietCell value={g.allergies} />
+                    </td>
+                    <td className="p-3">
+                      <DietCell value={g.diet} />
+                    </td>
+                    <td className="p-3">
+                      <DietCell value={g.intolerances} />
+                    </td>
                     <td className="p-3 text-ink-400 max-w-[12rem]">{g.dietary_comment || "-"}</td>
                   </>
                 )}
@@ -147,7 +189,7 @@ export default function AdminGuests() {
             ))}
             {guests.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-6 text-center text-ink-500">
+                <td colSpan={11} className="p-6 text-center text-ink-500">
                   Aucun invité pour l'instant.
                 </td>
               </tr>
@@ -165,7 +207,7 @@ function EditableCell({ value, onSave }) {
 
   if (!editing) {
     return (
-      <span className="cursor-pointer hover:text-party-600" onClick={() => setEditing(true)}>
+      <span className="cursor-pointer hover:text-party-400" onClick={() => setEditing(true)}>
         {value || <span className="text-ink-600">—</span>}
       </span>
     );

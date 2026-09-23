@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, AppSettings, BudgetCategory, BudgetItem, Guest
 from app.schemas import (
     AllergyConflict,
@@ -71,7 +71,7 @@ def _serialize(item: BudgetItem, guests: list[Guest]) -> BudgetItemAdmin:
 def list_items(
     category: BudgetCategory | None = Query(default=None),
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("budget")),
 ):
     query = db.query(BudgetItem)
     if category is not None:
@@ -85,7 +85,7 @@ def list_items(
 def create_item(
     payload: BudgetItemCreate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("budget")),
 ):
     item = BudgetItem(**payload.model_dump())
     db.add(item)
@@ -100,7 +100,7 @@ def update_item(
     item_id: str,
     payload: BudgetItemUpdate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("budget")),
 ):
     item = db.get(BudgetItem, item_id)
     if item is None:
@@ -115,7 +115,7 @@ def update_item(
 
 @router.delete("/items/{item_id}")
 def delete_item(
-    item_id: str, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    item_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("budget"))
 ):
     item = db.get(BudgetItem, item_id)
     if item is None:
@@ -126,7 +126,7 @@ def delete_item(
 
 
 @router.get("/summary", response_model=BudgetSummary)
-def get_summary(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def get_summary(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("budget"))):
     settings_row = _get_or_create_settings(db)
     items = db.query(BudgetItem).all()
     total_activities = sum(i.price for i in items if i.category == BudgetCategory.activity)
@@ -149,7 +149,7 @@ def get_summary(db: Session = Depends(get_db), admin: Admin = Depends(get_curren
 def set_budget_target(
     payload: BudgetTargetUpdate,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("budget")),
 ):
     settings_row = _get_or_create_settings(db)
     settings_row.budget_target = payload.budget_target

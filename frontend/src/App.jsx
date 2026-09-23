@@ -2,11 +2,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import PrepGate from "./components/PrepGate.jsx";
 import RequireAdmin from "./components/RequireAdmin.jsx";
+import AdminAccounts from "./pages/admin/Accounts.jsx";
 import AdminBudget from "./pages/admin/Budget.jsx";
 import AdminDashboard from "./pages/admin/Dashboard.jsx";
 import AdminGuests from "./pages/admin/GuestsAdmin.jsx";
 import AdminLogin from "./pages/admin/Login.jsx";
 import AdminMessages from "./pages/admin/MessagesAdmin.jsx";
+import MyAccount from "./pages/admin/MyAccount.jsx";
 import AdminPartyControl from "./pages/admin/PartyControl.jsx";
 import AdminPlanning from "./pages/admin/Planning.jsx";
 import AdminQuestions from "./pages/admin/QuestionsAdmin.jsx";
@@ -43,9 +45,25 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/invites"
+        path="/admin/mon-compte"
         element={
           <RequireAdmin>
+            <MyAccount />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/comptes"
+        element={
+          <RequireAdmin ownerOnly>
+            <AdminAccounts />
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/invites"
+        element={
+          <RequireAdmin section="guests">
             <AdminGuests />
           </RequireAdmin>
         }
@@ -53,7 +71,7 @@ export default function App() {
       <Route
         path="/admin/budget"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="budget">
             <AdminBudget />
           </RequireAdmin>
         }
@@ -61,7 +79,7 @@ export default function App() {
       <Route
         path="/admin/planning"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="planning">
             <AdminPlanning />
           </RequireAdmin>
         }
@@ -69,7 +87,7 @@ export default function App() {
       <Route
         path="/admin/questions"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="questions">
             <AdminQuestions />
           </RequireAdmin>
         }
@@ -77,7 +95,7 @@ export default function App() {
       <Route
         path="/admin/messages"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="messages">
             <AdminMessages />
           </RequireAdmin>
         }
@@ -85,7 +103,7 @@ export default function App() {
       <Route
         path="/admin/soiree"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="party">
             <AdminPartyControl />
           </RequireAdmin>
         }
@@ -93,7 +111,7 @@ export default function App() {
       <Route
         path="/admin/resultats"
         element={
-          <RequireAdmin>
+          <RequireAdmin section="results">
             <AdminResults />
           </RequireAdmin>
         }

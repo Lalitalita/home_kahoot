@@ -6,8 +6,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import Base, SessionLocal, engine as db_engine, sync_missing_columns
-from app.models import Admin
+from app.models import Admin, AdminRole
 from app.routers import (
+    accounts,
     auth,
     budget,
     export,
@@ -43,11 +44,22 @@ def on_startup() -> None:
     sync_missing_columns()
 
     with SessionLocal() as db:
+        # Backfill: admins created before multi-account support had no
+        # role column at all — treat them as the owner, matching the full
+        # access they already had, so upgrading never locks anyone out.
+        needs_backfill = db.query(Admin).filter(Admin.role.is_(None)).all()
+        for admin in needs_backfill:
+            admin.role = AdminRole.owner
+            admin.permissions = admin.permissions or ""
+        if needs_backfill:
+            db.commit()
+
         existing = db.query(Admin).filter(Admin.username == settings.admin_username).first()
         if existing is None:
             admin = Admin(
                 username=settings.admin_username,
                 password_hash=hash_password(settings.admin_bootstrap_password),
+                role=AdminRole.owner,
             )
             db.add(admin)
             db.commit()
@@ -56,6 +68,7 @@ def on_startup() -> None:
 app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
 
 app.include_router(auth.router)
+app.include_router(accounts.router)
 app.include_router(guests.router)
 app.include_router(questions.router)
 app.include_router(messages.router)

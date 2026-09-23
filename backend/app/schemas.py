@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models import BudgetCategory, QuestionStatus, ScheduleItemType
+from app.models import AdminRole, BudgetCategory, QuestionStatus, ScheduleItemType
 
 # ---------- Auth ----------
 
@@ -33,6 +33,64 @@ class Confirm2FASetupRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class AdminMe(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    username: str
+    role: AdminRole
+    permissions: list[str]
+    photo_url: str | None
+    totp_enabled: bool
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+class Start2FAResetRequest(BaseModel):
+    current_password: str
+
+
+class Start2FAResetResponse(BaseModel):
+    provisioning_uri: str
+
+
+class Confirm2FAResetRequest(BaseModel):
+    code: str
+
+
+# ---------- Admin accounts (owner-managed) ----------
+
+
+class AdminAccountCreate(BaseModel):
+    username: str
+    password: str
+    permissions: list[str] = []
+    guest_name: str
+
+
+class AdminAccountUpdate(BaseModel):
+    permissions: list[str] | None = None
+
+
+class AdminAccountResetPassword(BaseModel):
+    new_password: str
+
+
+class AdminAccountPublic(BaseModel):
+    id: str
+    username: str
+    role: AdminRole
+    permissions: list[str]
+    photo_url: str | None
+    totp_enabled: bool
+    guest_id: str | None
+    guest_name: str | None
+    created_at: datetime
 
 
 # ---------- Guests ----------
@@ -299,10 +357,11 @@ class PlayerAnswerDetail(BaseModel):
     question_text: str
     choices: list[str]
     correct_index: int
-    choice_index: int
-    is_correct: bool
-    points: int
-    response_time_ms: int
+    answered: bool
+    choice_index: int | None = None
+    is_correct: bool = False
+    points: int = 0
+    response_time_ms: int | None = None
 
 
 class PlayerResult(BaseModel):

@@ -27,6 +27,24 @@ def gen_access_code() -> str:
     return secrets.token_hex(4)
 
 
+class AdminRole(str, enum.Enum):
+    owner = "owner"
+    staff = "staff"
+
+
+# Every admin section that can be individually granted to a "staff" admin.
+# The owner always has every one of these implicitly.
+ADMIN_PERMISSION_SECTIONS = [
+    "guests",
+    "budget",
+    "planning",
+    "questions",
+    "messages",
+    "party",
+    "results",
+]
+
+
 class Admin(Base):
     __tablename__ = "admins"
 
@@ -35,7 +53,21 @@ class Admin(Base):
     password_hash: Mapped[str] = mapped_column(String)
     totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[AdminRole] = mapped_column(Enum(AdminRole), default=AdminRole.staff)
+    # Comma-separated subset of ADMIN_PERMISSION_SECTIONS. Ignored for the
+    # owner, who always has full access.
+    permissions: Mapped[str] = mapped_column(Text, default="")
+    # Staff admins are also invited guests — this links the two records.
+    guest_id: Mapped[str | None] = mapped_column(
+        ForeignKey("guests.id", ondelete="SET NULL"), nullable=True
+    )
+    photo_url: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    def has_permission(self, section: str) -> bool:
+        if self.role == AdminRole.owner:
+            return True
+        return section in (self.permissions or "").split(",")
 
 
 class Guest(Base):
@@ -191,6 +223,10 @@ class GameSession(Base):
     label: Mapped[str] = mapped_column(String, default="Session")
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     ended_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Comma-separated, in the order they were actually shown — lets recaps
+    # list every question a player *could* have answered, including ones
+    # they skipped, without depending on questions still existing/unedited.
+    question_ids: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class GamePlayer(Base):
@@ -207,6 +243,8 @@ class GamePlayer(Base):
     guest_id: Mapped[str | None] = mapped_column(
         ForeignKey("guests.id", ondelete="SET NULL"), nullable=True
     )
+    email: Mapped[str | None] = mapped_column(String, nullable=True)
+    recap_emailed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     score: Mapped[int] = mapped_column(Integer, default=0)
     joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

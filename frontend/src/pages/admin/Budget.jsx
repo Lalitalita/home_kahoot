@@ -108,7 +108,7 @@ function Stat({ label, value, highlight, danger }) {
     <div>
       <div
         className={`text-lg font-semibold ${
-          danger ? "text-rose-600" : highlight ? "text-party-600" : "text-ink-50"
+          danger ? "text-rose-600" : highlight ? "text-party-400" : "text-ink-50"
         }`}
       >
         {value}
@@ -308,7 +308,7 @@ function EditableCell({ value, onSave }) {
 
   if (!editing) {
     return (
-      <span className="cursor-pointer hover:text-party-600" onClick={() => setEditing(true)}>
+      <span className="cursor-pointer hover:text-party-400" onClick={() => setEditing(true)}>
         {value || <span className="text-ink-600">—</span>}
       </span>
     );

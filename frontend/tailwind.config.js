@@ -4,36 +4,52 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Warm terracotta accent — the app's single accent color, used on
-        // both surfaces below.
+        // Primary accent — cyan. 400 is the exact requested base (#39e3e3);
+        // darker shades give buttons/pills a readable surface, lighter
+        // shades are used as glow/text-on-dark.
         party: {
-          50: "#fdf6f2",
-          100: "#faeade",
-          200: "#f3d2b8",
-          300: "#e9b389",
-          400: "#dd9264",
-          500: "#cc7748",
-          600: "#b1602f",
-          700: "#8f4c27",
-          800: "#733e24",
-          900: "#5e3320",
-          950: "#331a10",
+          50: "#eafefe",
+          100: "#c9fbfb",
+          200: "#97f6f6",
+          300: "#5decec",
+          400: "#39e3e3",
+          500: "#17c9c9",
+          600: "#0fa3a3",
+          700: "#127f7f",
+          800: "#146565",
+          900: "#145353",
+          950: "#062525",
         },
-        // Warm dark neutrals (brown-black, never blue-slate) for the
-        // "cozy evening" surfaces: page background, cards, borders, text.
+        // Secondary accent — magenta, used sparingly (gradients, badges,
+        // an alternate CTA) so the cyan stays the dominant signal color.
+        magenta: {
+          50: "#fbeafe",
+          100: "#f3c9fb",
+          200: "#e692f7",
+          300: "#d35eef",
+          400: "#bb39e3",
+          500: "#9f22c7",
+          600: "#7f18a0",
+          700: "#661880",
+          800: "#531a66",
+          900: "#451a55",
+          950: "#230a2c",
+        },
+        // Near-black neutrals for the dark UI: #121212 page background,
+        // #181818 card surfaces, as requested.
         ink: {
-          50: "#f6f0e8",
-          100: "#e9dfd2",
-          200: "#cfc0ac",
-          300: "#ab9880",
-          400: "#8a7660",
-          500: "#6b5946",
-          600: "#4f4133",
-          700: "#3a2f25",
-          800: "#291f18",
-          850: "#20180f",
-          900: "#1a130d",
-          950: "#120d08",
+          50: "#f2f2f2",
+          100: "#dedede",
+          200: "#c2c2c2",
+          300: "#9e9e9e",
+          400: "#7a7a7a",
+          500: "#5c5c5c",
+          600: "#434343",
+          700: "#2e2e2e",
+          800: "#1e1e1e",
+          850: "#181818",
+          900: "#121212",
+          950: "#0a0a0a",
         },
       },
       fontFamily: {
@@ -41,12 +57,13 @@ export default {
         serif: ["'Fraunces'", "ui-serif", "Georgia", "serif"],
       },
       boxShadow: {
-        cozy: "0 12px 32px -16px rgba(0,0,0,0.55)",
-        glow: "0 0 70px -20px rgba(221,146,100,0.45)",
+        cozy: "0 12px 32px -16px rgba(0,0,0,0.7)",
+        glow: "0 0 45px -12px rgba(57,227,227,0.5)",
+        "glow-magenta": "0 0 45px -12px rgba(187,57,227,0.5)",
       },
       backgroundImage: {
         "warm-radial":
-          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(221,146,100,0.16), transparent)",
+          "radial-gradient(ellipse 70% 55% at 15% -10%, rgba(57,227,227,0.12), transparent), radial-gradient(ellipse 70% 55% at 85% 0%, rgba(187,57,227,0.10), transparent)",
       },
       keyframes: {
         "pop-in": {

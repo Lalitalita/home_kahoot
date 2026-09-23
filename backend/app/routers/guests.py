@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, Guest
 from app.schemas import (
     GuestAdmin,
@@ -68,13 +68,13 @@ async def upload_my_guest_photo(
 
 
 @router.get("/admin/guests", response_model=list[GuestAdmin])
-def list_guests_admin(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+def list_guests_admin(db: Session = Depends(get_db), admin: Admin = Depends(require_permission("guests"))):
     return db.query(Guest).order_by(Guest.created_at).all()
 
 
 @router.post("/admin/guests", response_model=GuestAdmin)
 def create_guest(
-    payload: GuestCreate, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    payload: GuestCreate, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("guests"))
 ):
     guest = Guest(**payload.model_dump())
     db.add(guest)
@@ -88,7 +88,7 @@ def update_guest_admin(
     guest_id: str,
     payload: GuestUpdateAdmin,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("guests")),
 ):
     guest = db.get(Guest, guest_id)
     if guest is None:
@@ -105,7 +105,7 @@ async def upload_guest_photo_admin(
     guest_id: str,
     file: UploadFile,
     db: Session = Depends(get_db),
-    admin: Admin = Depends(get_current_admin),
+    admin: Admin = Depends(require_permission("guests")),
 ):
     guest = db.get(Guest, guest_id)
     if guest is None:
@@ -118,7 +118,7 @@ async def upload_guest_photo_admin(
 
 @router.delete("/admin/guests/{guest_id}")
 def delete_guest(
-    guest_id: str, db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)
+    guest_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("guests"))
 ):
     guest = db.get(Guest, guest_id)
     if guest is None:

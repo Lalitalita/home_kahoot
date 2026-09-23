@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.deps import get_current_admin
+from app.deps import require_permission
 from app.models import Admin, Guest
 from app.quiz_engine import engine
 from app.ws_manager import manager
@@ -49,11 +49,13 @@ async def ws_player(
     nickname: str = Query(...),
     guest_code: str | None = Query(default=None),
     player_id: str | None = Query(default=None),
+    email: str | None = Query(default=None),
 ):
     nickname = nickname.strip()[:30]
     if not nickname:
         await websocket.close(code=4001)
         return
+    email = email.strip()[:255] or None if email else None
 
     db: Session = next(get_db())
     guest_id = None
@@ -66,7 +68,7 @@ async def ws_player(
     if player_id and player_id in engine.state.players:
         pid = player_id
     else:
-        pid = await engine.add_player(nickname, guest_id)
+        pid = await engine.add_player(nickname, guest_id, email)
 
     await manager.connect_player(websocket, pid)
     try:
@@ -99,7 +101,7 @@ control_router = APIRouter(prefix="/api/admin/quiz", tags=["quiz-control"])
 
 
 @control_router.get("/state")
-def get_state(admin: Admin = Depends(get_current_admin)):
+def get_state(admin: Admin = Depends(require_permission("party"))):
     return engine.public_state()
 
 
@@ -109,19 +111,19 @@ class ResetGameRequest(BaseModel):
 
 @control_router.post("/reset")
 async def reset_game(
-    payload: ResetGameRequest | None = None, admin: Admin = Depends(get_current_admin)
+    payload: ResetGameRequest | None = None, admin: Admin = Depends(require_permission("party"))
 ):
     await engine.reset(label=payload.label if payload else None)
     return engine.public_state()
 
 
 @control_router.post("/start")
-async def start_game(admin: Admin = Depends(get_current_admin)):
+async def start_game(admin: Admin = Depends(require_permission("party"))):
     await engine.start()
     return engine.public_state()
 
 
 @control_router.post("/advance")
-async def advance_game(admin: Admin = Depends(get_current_admin)):
+async def advance_game(admin: Admin = Depends(require_permission("party"))):
     await engine.advance()
     return engine.public_state()
