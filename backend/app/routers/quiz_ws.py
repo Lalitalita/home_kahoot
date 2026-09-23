@@ -49,26 +49,30 @@ async def ws_player(
     nickname: str = Query(...),
     guest_code: str | None = Query(default=None),
     player_id: str | None = Query(default=None),
-    email: str | None = Query(default=None),
 ):
     nickname = nickname.strip()[:30]
     if not nickname:
         await websocket.close(code=4001)
         return
-    email = email.strip()[:255] or None if email else None
 
+    # Email is never entered by the player — it's set ahead of time by the
+    # admin on the guest's record (kept a surprise), and only sourced here.
     db: Session = next(get_db())
     guest_id = None
+    email = None
+    photo_url = None
     if guest_code:
         guest = db.query(Guest).filter(Guest.access_code == guest_code).first()
         if guest is not None:
             guest_id = guest.id
+            email = guest.email
+            photo_url = guest.photo_url
     db.close()
 
     if player_id and player_id in engine.state.players:
         pid = player_id
     else:
-        pid = await engine.add_player(nickname, guest_id, email)
+        pid = await engine.add_player(nickname, guest_id, email, photo_url)
 
     await manager.connect_player(websocket, pid)
     try:

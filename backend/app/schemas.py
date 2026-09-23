@@ -137,6 +137,8 @@ class GuestSelfUpdate(BaseModel):
 
 class GuestAdmin(GuestSelf):
     access_code: str
+    # Admin-only — never exposed on GuestSelf/GuestPublic, kept as a surprise.
+    email: str | None
     created_at: datetime
 
 
@@ -155,6 +157,7 @@ class GuestUpdateAdmin(BaseModel):
     intolerances: str | None = None
     dietary_comment: str | None = None
     bringing_item: str | None = None
+    email: str | None = None
 
 
 # ---------- Questions ----------
@@ -368,7 +371,17 @@ class PlayerResult(BaseModel):
     player_id: str
     nickname: str
     score: int
+    email: str | None = None
+    recap_emailed_at: datetime | None = None
     answers: list[PlayerAnswerDetail]
+
+
+class PlayerEmailUpdate(BaseModel):
+    email: str | None = None
+
+
+class PlayerResendEmail(BaseModel):
+    email: str | None = None
 
 
 class GameSessionDetail(BaseModel):

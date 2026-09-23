@@ -23,11 +23,9 @@ export default function Controller() {
     }
 
     const code = localStorage.getItem("guest_access_code") || "";
-    const email = localStorage.getItem("player_email") || "";
     const existingPlayerId = localStorage.getItem("player_id") || "";
     const params = new URLSearchParams({ nickname });
     if (code) params.set("guest_code", code);
-    if (email) params.set("email", email);
     if (existingPlayerId) params.set("player_id", existingPlayerId);
 
     const ws = new WebSocket(wsUrl(`/ws/player?${params.toString()}`));
@@ -155,9 +153,6 @@ function FinalResult({ playerId, state }) {
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}
       </p>
       <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
-      {localStorage.getItem("player_email") && (
-        <p className="text-party-400 text-sm">Ton récap va aussi t'être envoyé par email 📧</p>
-      )}
       {playerId && (
         <a
           href={`/api/players/${playerId}/recap.pdf`}

@@ -81,6 +81,9 @@ class Guest(Base):
     access_code: Mapped[str] = mapped_column(
         String, unique=True, index=True, default=gen_access_code
     )
+    # Admin-only: never exposed via the guest's own self-service endpoints,
+    # so the "your recap will be emailed to you" moment stays a surprise.
+    email: Mapped[str | None] = mapped_column(String, nullable=True)
 
     # Filled in by the guest themselves via their personal link.
     allergies: Mapped[str | None] = mapped_column(Text, nullable=True)

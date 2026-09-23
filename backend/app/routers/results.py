@@ -1,16 +1,26 @@
+import asyncio
 import csv
 import io
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.deps import require_permission
+from app.email_sender import send_recap_email
 from app.models import Admin, GameAnswer, GamePlayer, GameSession
 from app.pdf import build_player_recap_pdf, build_session_recap_pdf
 from app.recap import build_player_result
-from app.schemas import GameSessionDetail, GameSessionSummary
+from app.schemas import (
+    GameSessionDetail,
+    GameSessionSummary,
+    PlayerEmailUpdate,
+    PlayerResendEmail,
+    PlayerResult,
+)
 
 router = APIRouter(prefix="/api", tags=["results"])
 
@@ -134,6 +144,56 @@ def export_session_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="resultats_{session_id[:8]}.pdf"'},
     )
+
+
+# ---------- Admin: manage a player's email + resend the recap ----------
+
+
+@router.patch("/admin/players/{player_id}/email", response_model=PlayerResult)
+def update_player_email(
+    player_id: str,
+    payload: PlayerEmailUpdate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_permission("results")),
+):
+    player = db.get(GamePlayer, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Joueur introuvable")
+    cleaned = payload.email.strip() if payload.email else ""
+    player.email = cleaned or None
+    db.commit()
+    db.refresh(player)
+    return build_player_result(db, player)
+
+
+@router.post("/admin/players/{player_id}/resend-email")
+async def resend_player_email(
+    player_id: str,
+    payload: PlayerResendEmail,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_permission("results")),
+):
+    player = db.get(GamePlayer, player_id)
+    if player is None:
+        raise HTTPException(status_code=404, detail="Joueur introuvable")
+
+    target = (payload.email or player.email or "").strip()
+    if not target:
+        raise HTTPException(status_code=400, detail="Aucune adresse email pour ce joueur")
+
+    result = build_player_result(db, player)
+    pdf_bytes = build_player_recap_pdf(result, party_title=get_settings().app_name)
+    sent = await asyncio.to_thread(
+        send_recap_email, target, player.nickname, pdf_bytes, get_settings().app_name
+    )
+    if not sent:
+        raise HTTPException(
+            status_code=502, detail="Échec de l'envoi — vérifie la configuration SMTP dans .env"
+        )
+
+    player.recap_emailed_at = datetime.utcnow()
+    db.commit()
+    return {"ok": True, "sent_to": target}
 
 
 # ---------- Player: personal recap ----------

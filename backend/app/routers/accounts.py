@@ -18,15 +18,20 @@ router = APIRouter(prefix="/api/admin/accounts", tags=["accounts"])
 
 def _to_public(admin: Admin, db: Session) -> AdminAccountPublic:
     guest_name = None
+    guest_photo_url = None
     if admin.guest_id:
         guest = db.get(Guest, admin.guest_id)
-        guest_name = guest.name if guest else None
+        if guest is not None:
+            guest_name = guest.name
+            guest_photo_url = guest.photo_url
     return AdminAccountPublic(
         id=admin.id,
         username=admin.username,
         role=admin.role,
         permissions=[p for p in (admin.permissions or "").split(",") if p],
-        photo_url=admin.photo_url,
+        # A staff account's photo can be set here or on their linked guest
+        # record (e.g. from the guest list) — either one shows up here.
+        photo_url=admin.photo_url or guest_photo_url,
         totp_enabled=admin.totp_enabled,
         guest_id=admin.guest_id,
         guest_name=guest_name,

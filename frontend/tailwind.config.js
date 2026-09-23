@@ -61,10 +61,6 @@ export default {
         glow: "0 0 45px -12px rgba(57,227,227,0.5)",
         "glow-magenta": "0 0 45px -12px rgba(187,57,227,0.5)",
       },
-      backgroundImage: {
-        "warm-radial":
-          "radial-gradient(ellipse 70% 55% at 15% -10%, rgba(57,227,227,0.12), transparent), radial-gradient(ellipse 70% 55% at 85% 0%, rgba(187,57,227,0.10), transparent)",
-      },
       keyframes: {
         "pop-in": {
           "0%": { transform: "scale(0.7)", opacity: 0 },

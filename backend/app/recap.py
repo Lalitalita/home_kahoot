@@ -53,5 +53,10 @@ def build_player_result(db: Session, player: GamePlayer) -> PlayerResult:
         )
 
     return PlayerResult(
-        player_id=player.id, nickname=player.nickname, score=player.score, answers=answers
+        player_id=player.id,
+        nickname=player.nickname,
+        score=player.score,
+        email=player.email,
+        recap_emailed_at=player.recap_emailed_at,
+        answers=answers,
     )

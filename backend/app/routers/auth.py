@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import get_current_admin
-from app.models import Admin
+from app.models import Admin, Guest
 from app.schemas import (
     AdminMe,
     ChangePasswordRequest,
@@ -35,13 +35,17 @@ from app.uploads import save_upload
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-def _admin_to_me(admin: Admin) -> AdminMe:
+def _admin_to_me(admin: Admin, db: Session) -> AdminMe:
+    guest_photo_url = None
+    if admin.guest_id:
+        guest = db.get(Guest, admin.guest_id)
+        guest_photo_url = guest.photo_url if guest else None
     return AdminMe(
         id=admin.id,
         username=admin.username,
         role=admin.role,
         permissions=[p for p in (admin.permissions or "").split(",") if p],
-        photo_url=admin.photo_url,
+        photo_url=admin.photo_url or guest_photo_url,
         totp_enabled=admin.totp_enabled,
     )
 
@@ -112,8 +116,8 @@ def verify_2fa(payload: Verify2FARequest, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=AdminMe)
-def me(admin: Admin = Depends(get_current_admin)):
-    return _admin_to_me(admin)
+def me(db: Session = Depends(get_db), admin: Admin = Depends(get_current_admin)):
+    return _admin_to_me(admin, db)
 
 
 @router.patch("/me/password", response_model=AdminMe)
@@ -129,7 +133,7 @@ def change_my_password(
 
     admin.password_hash = hash_password(payload.new_password)
     db.commit()
-    return _admin_to_me(admin)
+    return _admin_to_me(admin, db)
 
 
 @router.post("/me/2fa/start", response_model=Start2FAResetResponse)
@@ -171,7 +175,7 @@ def confirm_my_2fa_reset(
         raise HTTPException(status_code=401, detail="Code incorrect")
     admin.totp_enabled = True
     db.commit()
-    return _admin_to_me(admin)
+    return _admin_to_me(admin, db)
 
 
 @router.post("/me/photo", response_model=AdminMe)
@@ -180,4 +184,4 @@ async def upload_my_photo(
 ):
     admin.photo_url = await save_upload(file, "admins")
     db.commit()
-    return _admin_to_me(admin)
+    return _admin_to_me(admin, db)

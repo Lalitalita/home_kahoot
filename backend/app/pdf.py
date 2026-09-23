@@ -1,10 +1,12 @@
 import io
 
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import (
+    HRFlowable,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -15,28 +17,119 @@ from reportlab.platypus import (
 from app.schemas import GameSessionDetail, PlayerResult
 
 CYAN = colors.HexColor("#0fa3a3")
+CYAN_DARK = colors.HexColor("#127f7f")
 CYAN_TINT = colors.HexColor("#eafefe")
 MAGENTA = colors.HexColor("#7f18a0")
+MAGENTA_TINT = colors.HexColor("#fbeafe")
 INK = colors.HexColor("#181818")
 MUTED = colors.HexColor("#5c5c5c")
-BORDER = colors.HexColor("#d9d9d9")
+BORDER = colors.HexColor("#e2e2e2")
 GREEN = colors.HexColor("#15803d")
 RED = colors.HexColor("#b91c1c")
+WHITE = colors.white
+
+PAGE_MARGINS = dict(topMargin=1.6 * cm, bottomMargin=1.8 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
 
 _styles = getSampleStyleSheet()
-_title_style = ParagraphStyle(
-    "RecapTitle", parent=_styles["Title"], textColor=INK, fontSize=20, spaceAfter=4
+_banner_title_style = ParagraphStyle(
+    "BannerTitle", parent=_styles["Title"], textColor=WHITE, fontSize=22, alignment=TA_CENTER, spaceAfter=2
 )
-_subtitle_style = ParagraphStyle(
-    "RecapSubtitle", parent=_styles["Normal"], textColor=MUTED, fontSize=11, spaceAfter=16
+_banner_subtitle_style = ParagraphStyle(
+    "BannerSubtitle", parent=_styles["Normal"], textColor=CYAN_TINT, fontSize=11, alignment=TA_CENTER
+)
+_score_number_style = ParagraphStyle(
+    "ScoreNumber", parent=_styles["Title"], textColor=WHITE, fontSize=26, alignment=TA_CENTER, spaceAfter=0
+)
+_score_label_style = ParagraphStyle(
+    "ScoreLabel", parent=_styles["Normal"], textColor=MAGENTA_TINT, fontSize=9, alignment=TA_CENTER
 )
 _question_style = ParagraphStyle(
     "RecapQuestion", parent=_styles["Normal"], textColor=INK, fontSize=11, fontName="Helvetica-Bold"
 )
 _answer_style = ParagraphStyle("RecapAnswer", parent=_styles["Normal"], fontSize=10, textColor=INK)
 _section_style = ParagraphStyle(
-    "RecapSection", parent=_styles["Heading2"], textColor=MAGENTA, spaceBefore=18, spaceAfter=8
+    "RecapSection", parent=_styles["Heading2"], textColor=MAGENTA, fontSize=14, spaceBefore=16, spaceAfter=4
 )
+_footer_style = ParagraphStyle("Footer", parent=_styles["Normal"], textColor=MUTED, fontSize=8, alignment=TA_CENTER)
+
+
+def _title_banner(title: str, subtitle: str) -> Table:
+    """A full-width colored header band, cyan fading into a magenta edge —
+    reportlab has no real gradient fill for flowables, so two adjoining
+    solid-color cells stand in for one."""
+    cell = Table(
+        [[Paragraph(title, _banner_title_style)], [Paragraph(subtitle, _banner_subtitle_style)]],
+        colWidths=[17 * cm],
+    )
+    cell.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), CYAN_DARK),
+                ("TOPPADDING", (0, 0), (-1, 0), 14),
+                ("BOTTOMPADDING", (0, -1), (-1, -1), 14),
+                ("TOPPADDING", (0, 1), (-1, 1), 2),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    accent = Table([[""]], colWidths=[17 * cm], rowHeights=[4])
+    accent.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), MAGENTA)]))
+    wrapper = Table([[cell], [accent]], colWidths=[17 * cm])
+    wrapper.setStyle(
+        TableStyle(
+            [
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    return wrapper
+
+
+def _score_badge(score: int, correct_count: int, total: int) -> Table:
+    def _cell(number: str, label: str, bg) -> Table:
+        t = Table([[Paragraph(number, _score_number_style)], [Paragraph(label, _score_label_style)]])
+        t.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), bg),
+                    ("TOPPADDING", (0, 0), (-1, 0), 10),
+                    ("BOTTOMPADDING", (0, 1), (-1, 1), 10),
+                    ("TOPPADDING", (0, 1), (-1, 1), 0),
+                ]
+            )
+        )
+        return t
+
+    row = [
+        _cell(str(score), "POINTS", MAGENTA),
+        _cell(f"{correct_count}/{total}" if total else "—", "BONNES RÉPONSES", CYAN_DARK),
+    ]
+    wrapper = Table([row], colWidths=[8.4 * cm, 8.4 * cm], spaceBefore=10, spaceAfter=14)
+    wrapper.setStyle(
+        TableStyle(
+            [
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    return wrapper
+
+
+def _footer(canvas, doc) -> None:
+    canvas.saveState()
+    canvas.setStrokeColor(BORDER)
+    canvas.line(1.5 * cm, 1.3 * cm, A4[0] - 1.5 * cm, 1.3 * cm)
+    canvas.setFont("Helvetica", 8)
+    canvas.setFillColor(MUTED)
+    canvas.drawCentredString(A4[0] / 2, 0.9 * cm, f"C'est la fête — page {doc.page}")
+    canvas.restoreState()
 
 
 def _player_answers_table(player: PlayerResult) -> Table:
@@ -57,7 +150,7 @@ def _player_answers_table(player: PlayerResult) -> Table:
             [
                 str(i),
                 Paragraph(a.question_text, _answer_style),
-                Paragraph(given, ParagraphStyle("given", parent=_answer_style, textColor=given_color)),
+                Paragraph(given, ParagraphStyle("given", parent=_answer_style, textColor=given_color, fontName="Helvetica-Bold")),
                 Paragraph(correct, _answer_style),
                 str(a.points),
             ]
@@ -67,15 +160,16 @@ def _player_answers_table(player: PlayerResult) -> Table:
     table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), CYAN),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 0), (-1, 0), CYAN_DARK),
+                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, -1), 9),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, CYAN_TINT]),
-                ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, CYAN_TINT]),
+                ("LINEBELOW", (0, 0), (-1, -1), 0.5, BORDER),
+                ("BOX", (0, 0), (-1, -1), 0.75, CYAN_DARK),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
             ]
         )
     )
@@ -84,40 +178,30 @@ def _player_answers_table(player: PlayerResult) -> Table:
 
 def build_player_recap_pdf(player: PlayerResult, party_title: str = "C'est la fête") -> bytes:
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=A4, topMargin=2 * cm, bottomMargin=2 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=A4, **PAGE_MARGINS)
     correct_count = sum(1 for a in player.answers if a.is_correct)
     total = len(player.answers)
 
     story = [
-        Paragraph(f"Récap du quiz — {party_title}", _title_style),
-        Paragraph(
-            f"{player.nickname} — score final : {player.score} points "
-            f"({correct_count}/{total} bonnes réponses)",
-            _subtitle_style,
-        ),
+        _title_banner(party_title, f"Récap du quiz de {player.nickname}"),
+        _score_badge(player.score, correct_count, total),
     ]
     if player.answers:
         story.append(_player_answers_table(player))
     else:
         story.append(Paragraph("Aucune réponse enregistrée pour cette session.", _answer_style))
 
-    doc.build(story)
+    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buffer.getvalue()
 
 
 def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'est la fête") -> bytes:
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer, pagesize=A4, topMargin=2 * cm, bottomMargin=2 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=A4, **PAGE_MARGINS)
 
     story = [
-        Paragraph(f"Résultats du quiz — {party_title}", _title_style),
-        Paragraph(
-            f"{session.label} · {session.started_at.strftime('%d/%m/%Y %H:%M')}", _subtitle_style
-        ),
+        _title_banner(party_title, f"{session.label} · {session.started_at.strftime('%d/%m/%Y %H:%M')}"),
+        Spacer(1, 12),
     ]
 
     ranking_rows = [["#", "Pseudo", "Score"]]
@@ -127,26 +211,34 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
     ranking_table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), CYAN),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 0), (-1, 0), MAGENTA),
+                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, -1), 10),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, CYAN_TINT]),
-                ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, MAGENTA_TINT]),
+                ("BOX", (0, 0), (-1, -1), 0.75, MAGENTA),
+                ("LINEBELOW", (0, 0), (-1, -1), 0.5, BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
             ]
         )
     )
     story.append(ranking_table)
 
     for player in sorted(session.players, key=lambda p: p.score, reverse=True):
-        story.append(Paragraph(f"{player.nickname} — {player.score} pts", _section_style))
+        correct_count = sum(1 for a in player.answers if a.is_correct)
+        story.append(HRFlowable(width="100%", thickness=0.75, color=BORDER, spaceBefore=18, spaceAfter=2))
+        story.append(
+            Paragraph(
+                f"{player.nickname} — {player.score} pts ({correct_count}/{len(player.answers)})",
+                _section_style,
+            )
+        )
         if player.answers:
             story.append(_player_answers_table(player))
         else:
             story.append(Paragraph("Aucune réponse enregistrée.", _answer_style))
         story.append(Spacer(1, 4))
 
-    doc.build(story)
+    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buffer.getvalue()

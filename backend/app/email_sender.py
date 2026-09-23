@@ -18,24 +18,41 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 
 
+def _html_body(nickname: str) -> str:
+    return (
+        f"Hello {nickname}, <br>"
+        "Merci d'avoir participé au quiz de mon anniversaire ! <br>"
+        "Tu pourras retrouver en pièce jointe un pdf avec tes réponses et les réponses justes <br>"
+        "Merci, <br>"
+        "Lana"
+    )
+
+
+def _text_body(nickname: str) -> str:
+    return (
+        f"Hello {nickname},\n"
+        "Merci d'avoir participé au quiz de mon anniversaire !\n"
+        "Tu pourras retrouver en pièce jointe un pdf avec tes réponses et les réponses justes\n"
+        "Merci,\n"
+        "Lana"
+    )
+
+
 def send_recap_email(to_email: str, nickname: str, pdf_bytes: bytes, party_title: str) -> bool:
     settings = get_settings()
     if not settings.smtp_configured:
         logger.info("SMTP non configuré : récap non envoyé à %s", to_email)
         return False
 
-    message = MIMEMultipart()
+    message = MIMEMultipart("mixed")
     message["Subject"] = f"Ton récap du quiz — {party_title}"
     message["From"] = formataddr((settings.smtp_from_name, settings.smtp_from_email))
     message["To"] = to_email
 
-    body = (
-        f"Salut {nickname},\n\n"
-        f"Merci d'avoir joué au quiz de {party_title} ! "
-        "Tu trouveras en pièce jointe le récap de tes réponses.\n\n"
-        f"À bientôt,\n{settings.smtp_from_name}"
-    )
-    message.attach(MIMEText(body, "plain", "utf-8"))
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(_text_body(nickname), "plain", "utf-8"))
+    alt.attach(MIMEText(_html_body(nickname), "html", "utf-8"))
+    message.attach(alt)
 
     attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
     attachment.add_header(

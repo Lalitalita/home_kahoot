@@ -34,6 +34,7 @@ class PlayerState:
     nickname: str
     guest_id: str | None = None
     email: str | None = None
+    photo_url: str | None = None
     score: int = 0
     streak: int = 0
     answered_this_round: bool = False
@@ -96,12 +97,20 @@ class QuizEngine:
         await self._broadcast_state()
 
     async def add_player(
-        self, nickname: str, guest_id: str | None, email: str | None = None
+        self,
+        nickname: str,
+        guest_id: str | None,
+        email: str | None = None,
+        photo_url: str | None = None,
     ) -> str:
         async with self._lock:
             player_id = str(uuid.uuid4())
             self.state.players[player_id] = PlayerState(
-                id=player_id, nickname=nickname, guest_id=guest_id, email=email
+                id=player_id,
+                nickname=nickname,
+                guest_id=guest_id,
+                email=email,
+                photo_url=photo_url,
             )
             with SessionLocal() as db:
                 db.add(
@@ -203,14 +212,30 @@ class QuizEngine:
                 db.commit()
 
     async def _send_recap_emails(self) -> None:
-        """Background task: mail each player who gave an email their PDF
-        recap. Runs after the finished-state broadcast so it never delays
-        the TV/controller UI, and never raises into the caller."""
-        players_with_email = [p for p in self.state.players.values() if p.email]
-        for player in players_with_email:
+        """Background task: mail each player who has an email on file their
+        PDF recap. Reads the DB fresh (rather than the in-memory state) so
+        it picks up any email the admin added/edited right up to the end of
+        the session, and only ever reaches players who actually joined
+        *this* session. Runs after the finished-state broadcast so it never
+        delays the TV/controller UI, and never raises into the caller."""
+        if not self.state.session_id:
+            return
+        with SessionLocal() as db:
+            players = (
+                db.query(GamePlayer)
+                .filter(
+                    GamePlayer.session_id == self.state.session_id,
+                    GamePlayer.email.isnot(None),
+                    GamePlayer.email != "",
+                )
+                .all()
+            )
+            player_ids = [p.id for p in players]
+
+        for player_id in player_ids:
             try:
                 with SessionLocal() as db:
-                    db_player = db.get(GamePlayer, player.id)
+                    db_player = db.get(GamePlayer, player_id)
                     if db_player is None or not db_player.email:
                         continue
                     result = build_player_result(db, db_player)
@@ -226,7 +251,7 @@ class QuizEngine:
                         db_player.recap_emailed_at = datetime.utcnow()
                         db.commit()
             except Exception:
-                logger.exception("Échec de l'envoi du récap à %s", player.email)
+                logger.exception("Échec de l'envoi du récap au joueur %s", player_id)
 
     def _cancel_auto_reveal(self) -> None:
         task = self.state.auto_reveal_task
@@ -317,7 +342,13 @@ class QuizEngine:
     def leaderboard(self) -> list[dict]:
         ranked = sorted(self.state.players.values(), key=lambda p: p.score, reverse=True)
         return [
-            {"nickname": p.nickname, "score": p.score, "player_id": p.id} for p in ranked
+            {
+                "nickname": p.nickname,
+                "score": p.score,
+                "player_id": p.id,
+                "photo_url": p.photo_url,
+            }
+            for p in ranked
         ]
 
     def public_state(self) -> dict:

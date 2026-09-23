@@ -50,6 +50,31 @@ export default function AdminResults() {
     load();
   }
 
+  async function refreshDetail() {
+    if (!expandedId) return;
+    const d = await api.get(`/api/admin/sessions/${expandedId}`, { auth: true });
+    setDetail(d);
+  }
+
+  async function updatePlayerEmail(playerId, email) {
+    await api.patch(`/api/admin/players/${playerId}/email`, { email }, { auth: true });
+    refreshDetail();
+  }
+
+  async function resendPlayerEmail(playerId, overrideEmail) {
+    try {
+      const res = await api.post(
+        `/api/admin/players/${playerId}/resend-email`,
+        overrideEmail ? { email: overrideEmail } : {},
+        { auth: true }
+      );
+      alert(`Récap renvoyé à ${res.sent_to}`);
+      refreshDetail();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
   return (
     <AdminLayout title="Résultats du quiz">
       <p className="text-sm text-ink-500 mb-6">
@@ -95,7 +120,13 @@ export default function AdminResults() {
             {expandedId === s.id && (
               <div className="mt-4 pt-4 border-t border-ink-700">
                 {loadingDetail && <p className="text-ink-500 text-sm">Chargement...</p>}
-                {!loadingDetail && detail && <SessionDetail detail={detail} />}
+                {!loadingDetail && detail && (
+                  <SessionDetail
+                    detail={detail}
+                    onEmailChange={updatePlayerEmail}
+                    onResend={resendPlayerEmail}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -110,7 +141,7 @@ export default function AdminResults() {
   );
 }
 
-function SessionDetail({ detail }) {
+function SessionDetail({ detail, onEmailChange, onResend }) {
   const ranked = [...detail.players].sort((a, b) => b.score - a.score);
 
   return (
@@ -128,9 +159,16 @@ function SessionDetail({ detail }) {
 
       {ranked.map((p) => (
         <div key={p.player_id}>
-          <h4 className="text-sm font-semibold text-party-400 mb-2">
-            {p.nickname} — {p.score} pts
-          </h4>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <h4 className="text-sm font-semibold text-party-400">
+              {p.nickname} — {p.score} pts
+            </h4>
+            <PlayerEmailControls
+              player={p}
+              onEmailChange={(email) => onEmailChange(p.player_id, email)}
+              onResend={(overrideEmail) => onResend(p.player_id, overrideEmail)}
+            />
+          </div>
           {p.answers.length === 0 ? (
             <p className="text-xs text-ink-500">Aucune réponse.</p>
           ) : (
@@ -148,8 +186,16 @@ function SessionDetail({ detail }) {
                   {p.answers.map((a) => (
                     <tr key={a.question_id} className="border-b border-ink-800/60">
                       <td className="p-2 text-ink-200">{a.question_text}</td>
-                      <td className={`p-2 ${a.is_correct ? "text-emerald-500" : "text-rose-500"}`}>
-                        {a.choices[a.choice_index] ?? "—"}
+                      <td
+                        className={`p-2 ${
+                          !a.answered
+                            ? "text-ink-500"
+                            : a.is_correct
+                            ? "text-emerald-500"
+                            : "text-rose-500"
+                        }`}
+                      >
+                        {a.answered ? a.choices[a.choice_index] ?? "—" : "Pas de réponse"}
                       </td>
                       <td className="p-2 text-ink-400">{a.choices[a.correct_index]}</td>
                       <td className="p-2 text-ink-200">{a.points}</td>
@@ -161,6 +207,55 @@ function SessionDetail({ detail }) {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function PlayerEmailControls({ player, onEmailChange, onResend }) {
+  const [email, setEmail] = useState(player.email || "");
+  const [sending, setSending] = useState(false);
+
+  async function handleResend(custom) {
+    setSending(true);
+    try {
+      await onResend(custom);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleResendCustom() {
+    const custom = window.prompt("Renvoyer le récap à quelle adresse ?", email || "");
+    if (custom && custom.trim()) handleResend(custom.trim());
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <input
+        className="input py-1 px-2 text-xs w-48"
+        type="email"
+        placeholder="Email (optionnel)"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onBlur={() => {
+          if (email.trim() !== (player.email || "")) onEmailChange(email.trim());
+        }}
+      />
+      <button
+        className="btn-secondary py-1 px-2 text-xs"
+        disabled={!email.trim() || sending}
+        onClick={() => handleResend()}
+      >
+        {sending ? "Envoi..." : "Renvoyer"}
+      </button>
+      <button className="text-ink-500 hover:text-ink-200" onClick={handleResendCustom}>
+        Autre adresse…
+      </button>
+      {player.recap_emailed_at && (
+        <span className="text-ink-600">
+          Envoyé le {new Date(player.recap_emailed_at).toLocaleString("fr-FR")}
+        </span>
+      )}
     </div>
   );
 }

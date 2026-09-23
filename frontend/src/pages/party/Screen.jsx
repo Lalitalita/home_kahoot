@@ -31,7 +31,7 @@ export default function Screen() {
   const phase = state?.phase;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-ink-950 via-ink-900 to-party-950 text-white flex flex-col p-8 overflow-hidden">
+    <div className="min-h-screen bg-ink-900 text-white flex flex-col p-8 overflow-hidden">
       {!connected && (
         <div className="fixed top-3 right-3 text-xs text-red-400 bg-ink-900/80 px-3 py-1 rounded-full">
           Connexion au serveur...
@@ -66,7 +66,17 @@ function Lobby({ state }) {
       </div>
       <div className="flex flex-wrap gap-3 justify-center max-w-3xl">
         {(state?.leaderboard || []).map((p) => (
-          <span key={p.player_id} className="bg-ink-800 rounded-full px-4 py-2 text-lg animate-pop-in">
+          <span
+            key={p.player_id}
+            className="bg-ink-800 rounded-full pl-2 pr-4 py-2 text-lg flex items-center gap-2 animate-pop-in"
+          >
+            {p.photo_url ? (
+              <img src={p.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <span className="w-8 h-8 rounded-full bg-ink-700 flex items-center justify-center text-sm">
+                🙂
+              </span>
+            )}
             {p.nickname}
           </span>
         ))}
@@ -188,8 +198,12 @@ function LeaderboardView({ state }) {
             }`}
             style={{ animationDelay: `${i * 0.1}s` }}
           >
-            <span>
-              #{i + 1} {p.nickname}
+            <span className="flex items-center gap-3">
+              <span className="w-8">#{i + 1}</span>
+              {p.photo_url ? (
+                <img src={p.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+              ) : null}
+              {p.nickname}
             </span>
             <span className="font-mono">{p.score}</span>
           </div>

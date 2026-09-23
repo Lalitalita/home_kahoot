@@ -114,6 +114,7 @@ export default function AdminGuests() {
               <th className="p-3">Nom</th>
               <th className="p-3">Pseudo</th>
               <th className="p-3">Description</th>
+              <th className="p-3">Email</th>
               <th className="p-3">Amène</th>
               {showDiet && (
                 <>
@@ -155,6 +156,12 @@ export default function AdminGuests() {
                   <EditableCell
                     value={g.description || ""}
                     onSave={(v) => handleUpdate(g, "description", v)}
+                  />
+                </td>
+                <td className="p-3 max-w-[12rem]">
+                  <EditableCell
+                    value={g.email || ""}
+                    onSave={(v) => handleUpdate(g, "email", v)}
                   />
                 </td>
                 <td className="p-3 max-w-[14rem]">
