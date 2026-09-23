@@ -10,10 +10,11 @@ from sqlalchemy import select
 
 from app.config import get_settings
 from app.database import SessionLocal
-from app.email_sender import send_recap_email
+from app.email_sender import send_recap_email, send_session_recap_email
 from app.models import GameAnswer, GamePlayer, GameSession, Question, QuestionStatus
-from app.pdf import build_player_recap_pdf
+from app.pdf import build_player_recap_pdf, build_session_recap_pdf
 from app.recap import build_player_result
+from app.schemas import GameSessionDetail
 from app.ws_manager import manager
 
 settings = get_settings()
@@ -192,6 +193,7 @@ class QuizEngine:
 
         if just_finished:
             asyncio.create_task(self._send_recap_emails())
+            asyncio.create_task(self._send_admin_recap_email())
 
     def _begin_question(self) -> None:
         self.state.phase = Phase.question
@@ -267,6 +269,40 @@ class QuizEngine:
                         db.commit()
             except Exception:
                 logger.exception("Échec de l'envoi du récap au joueur %s", player_id)
+
+    async def _send_admin_recap_email(self) -> None:
+        """Background task: mail the organizer their own copy of the full
+        session — every player, every answer, the podium — separate from
+        each player's personal recap. Never raises into the caller."""
+        if not self.state.session_id:
+            return
+        target = settings.admin_recap_email_or_default
+        if not target:
+            return
+        try:
+            with SessionLocal() as db:
+                session_row = db.get(GameSession, self.state.session_id)
+                if session_row is None:
+                    return
+                players = (
+                    db.query(GamePlayer)
+                    .filter(GamePlayer.session_id == self.state.session_id)
+                    .order_by(GamePlayer.score.desc())
+                    .all()
+                )
+                detail = GameSessionDetail(
+                    id=session_row.id,
+                    label=session_row.label,
+                    started_at=session_row.started_at,
+                    ended_at=session_row.ended_at,
+                    players=[build_player_result(db, p) for p in players],
+                )
+            pdf_bytes = build_session_recap_pdf(detail, party_title=settings.app_name)
+            await asyncio.to_thread(
+                send_session_recap_email, target, detail.label, len(detail.players), pdf_bytes, settings.app_name
+            )
+        except Exception:
+            logger.exception("Échec de l'envoi du récap complet de session à l'organisateur")
 
     def _cancel_pending(self) -> None:
         task = self.state.pending_task

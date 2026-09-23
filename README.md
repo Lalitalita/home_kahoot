@@ -34,8 +34,12 @@ messages en bonus.
 - Score basé sur la bonne réponse **et** la rapidité
 - Classement en direct + podium top 3 animé en fin de partie
 - Barre de progression (question X / N) sur l'écran TV et sur le téléphone de chaque invité
-- Chaque invité peut laisser son email en rejoignant pour recevoir son récap par email à la fin,
-  et peut aussi le télécharger en PDF (ses réponses vs. les bonnes, y compris celles sans réponse)
+- Chaque invité reçoit son récap par email à la fin (l'adresse est renseignée à l'avance sur sa
+  fiche, par toi ou par lui-même — jamais annoncée avant, pour que ça reste une surprise), avec
+  uniquement ses propres réponses (les siennes vs. les bonnes, y compris celles sans réponse)
+- Toi (l'organisateur) reçois en plus, à la fin de chaque session, un second email avec le récap
+  complet : les réponses de tout le monde et le podium (adresse configurable via
+  `ADMIN_RECAP_EMAIL`, sinon envoyé à `SMTP_FROM_EMAIL` toi-même)
 
 **Après la soirée (ou après un essai)**
 - Chaque lancement du quiz crée une **session** séparée : tu peux faire plusieurs essais

@@ -39,8 +39,11 @@ BODY_FONT_BOLD = "Inter-Bold"
 CYAN = colors.HexColor("#0fa3a3")
 CYAN_DARK = colors.HexColor("#0d8a8a")
 CYAN_TINT = colors.HexColor("#eefdfd")
+# Kept as a rare, deliberate accent — section titles, the podium heading,
+# the thin strip under the banner — never as another competing block
+# color alongside cyan.
 MAGENTA = colors.HexColor("#7f18a0")
-MAGENTA_TINT = colors.HexColor("#faf0fd")
+CHARCOAL = colors.HexColor("#2b2b30")
 INK = colors.HexColor("#1c1c1c")
 MUTED = colors.HexColor("#6b6b6b")
 BORDER = colors.HexColor("#e7e7ea")
@@ -143,7 +146,7 @@ class ScoreBadges(Flowable):
         badge(0, MAGENTA, str(self.score), "POINTS")
         badge(
             badge_w + gap,
-            CYAN_DARK,
+            CHARCOAL,
             f"{self.correct_count}/{self.total}" if self.total else "—",
             "BONNES RÉPONSES",
         )
@@ -329,10 +332,10 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
     ranking_table.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, 0), MAGENTA),
+                ("BACKGROUND", (0, 0), (-1, 0), CYAN_DARK),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, MAGENTA_TINT]),
-                ("BOX", (0, 0), (-1, -1), 0.75, MAGENTA),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, CYAN_TINT]),
+                ("BOX", (0, 0), (-1, -1), 0.75, CYAN_DARK),
                 ("LINEBELOW", (0, 0), (-1, -2), 0.5, BORDER),
                 ("TOPPADDING", (0, 0), (-1, -1), 7),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 7),

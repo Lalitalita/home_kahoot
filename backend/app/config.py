@@ -35,10 +35,18 @@ class Settings(BaseSettings):
     smtp_use_ssl: bool = True
     smtp_from_email: str = "contact@amonita.fr"
     smtp_from_name: str = "Anniv Lana"
+    # Where the organizer's own full-session recap (every player, every
+    # answer, the podium) gets emailed once a session ends. Defaults to
+    # the sender address itself — an email to yourself — if left blank.
+    admin_recap_email: str = ""
 
     @property
     def smtp_configured(self) -> bool:
         return bool(self.smtp_host and self.smtp_username and self.smtp_password)
+
+    @property
+    def admin_recap_email_or_default(self) -> str:
+        return self.admin_recap_email or self.smtp_from_email
 
     @property
     def cors_origin_list(self) -> list[str]:
