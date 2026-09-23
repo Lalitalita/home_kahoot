@@ -4,17 +4,22 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Warm terracotta accent — used everywhere the app used to use a
+        // saturated magenta/purple. Kept under the same token name
+        // ("party") so it applies wherever the class is already used,
+        // including the live-quiz screens.
         party: {
-          50: "#fdf4ff",
-          100: "#fae8ff",
-          200: "#f5d0fe",
-          300: "#f0abfc",
-          400: "#e879f9",
-          500: "#d946ef",
-          600: "#c026d3",
-          700: "#a21caf",
-          800: "#86198f",
-          900: "#701a75",
+          50: "#fdf6f2",
+          100: "#faeade",
+          200: "#f3d2b8",
+          300: "#e9b389",
+          400: "#dd9264",
+          500: "#cc7748",
+          600: "#b1602f",
+          700: "#8f4c27",
+          800: "#733e24",
+          900: "#5e3320",
+          950: "#331a10",
         },
       },
       fontFamily: {

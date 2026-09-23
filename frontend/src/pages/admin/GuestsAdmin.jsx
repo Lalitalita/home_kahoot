@@ -84,11 +84,11 @@ export default function AdminGuests() {
           Ajouter
         </button>
       </form>
-      {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+      {error && <p className="text-rose-600 text-sm mb-4">{error}</p>}
 
       <div className="overflow-x-auto card p-0">
         <table className="w-full text-sm">
-          <thead className="text-left text-slate-400 border-b border-slate-800">
+          <thead className="text-left text-stone-400 border-b border-stone-200">
             <tr>
               <th className="p-3">Nom</th>
               <th className="p-3">Pseudo</th>
@@ -108,7 +108,7 @@ export default function AdminGuests() {
           </thead>
           <tbody>
             {guests.map((g) => (
-              <tr key={g.id} className="border-b border-slate-800/60">
+              <tr key={g.id} className="border-b border-stone-100">
                 <td className="p-3">
                   <EditableCell value={g.name} onSave={(v) => handleUpdate(g, "name", v)} />
                 </td>
@@ -129,17 +129,17 @@ export default function AdminGuests() {
                 </td>
                 {showDiet && (
                   <>
-                    <td className="p-3 text-amber-300">{g.allergies || "-"}</td>
+                    <td className="p-3 text-amber-600">{g.allergies || "-"}</td>
                     <td className="p-3">{g.diet || "-"}</td>
                     <td className="p-3">{g.intolerances || "-"}</td>
-                    <td className="p-3 text-slate-400 max-w-[12rem]">{g.dietary_comment || "-"}</td>
+                    <td className="p-3 text-stone-500 max-w-[12rem]">{g.dietary_comment || "-"}</td>
                   </>
                 )}
                 <td className="p-3">
-                  <code className="text-xs bg-slate-800 rounded px-2 py-1">/invites/{g.access_code}</code>
+                  <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1">/invites/{g.access_code}</code>
                 </td>
                 <td className="p-3">
-                  <button className="text-red-400 hover:text-red-300 text-xs" onClick={() => handleDelete(g.id)}>
+                  <button className="text-rose-600 hover:text-rose-500 text-xs" onClick={() => handleDelete(g.id)}>
                     Supprimer
                   </button>
                 </td>
@@ -147,7 +147,7 @@ export default function AdminGuests() {
             ))}
             {guests.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-6 text-center text-slate-500">
+                <td colSpan={10} className="p-6 text-center text-stone-400">
                   Aucun invité pour l'instant.
                 </td>
               </tr>
@@ -165,8 +165,8 @@ function EditableCell({ value, onSave }) {
 
   if (!editing) {
     return (
-      <span className="cursor-pointer hover:text-party-400" onClick={() => setEditing(true)}>
-        {value || <span className="text-slate-600">—</span>}
+      <span className="cursor-pointer hover:text-party-600" onClick={() => setEditing(true)}>
+        {value || <span className="text-stone-300">—</span>}
       </span>
     );
   }

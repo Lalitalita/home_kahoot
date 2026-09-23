@@ -9,7 +9,7 @@ export default function PrepGate({ children }) {
 
   if (partyModeActive === null && !error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400">
+      <div className="min-h-screen flex items-center justify-center text-stone-400">
         Chargement...
       </div>
     );
@@ -19,9 +19,9 @@ export default function PrepGate({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="card max-w-md space-y-4">
-          <div className="text-5xl">🎉</div>
-          <h1 className="text-2xl font-bold text-white">C'est parti !</h1>
-          <p className="text-slate-400">
+          <div className="text-4xl">🎉</div>
+          <h1 className="text-2xl font-semibold text-stone-900">C'est parti !</h1>
+          <p className="text-stone-500">
             Le mode soirée est activé, les pages de préparation sont fermées.
           </p>
           <Link to="/soiree" className="btn-primary w-full">

@@ -25,12 +25,12 @@ export default function AdminMessages() {
           <div key={m.id} className="card flex justify-between gap-4">
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="font-semibold text-white">{m.author_name}</span>
-                <span className="text-xs text-slate-500">
+                <span className="font-semibold text-stone-900">{m.author_name}</span>
+                <span className="text-xs text-stone-400">
                   {new Date(m.created_at).toLocaleString("fr-FR")}
                 </span>
               </div>
-              {m.content && <p className="text-slate-300 mt-1">{m.content}</p>}
+              {m.content && <p className="text-stone-600 mt-1">{m.content}</p>}
               {m.photo_url && <img src={m.photo_url} alt="" className="mt-2 max-h-40 rounded-lg" />}
             </div>
             <button className="btn-danger h-fit shrink-0" onClick={() => remove(m.id)}>
@@ -38,7 +38,7 @@ export default function AdminMessages() {
             </button>
           </div>
         ))}
-        {messages.length === 0 && <p className="text-slate-500 text-center py-8">Aucun message.</p>}
+        {messages.length === 0 && <p className="text-stone-400 text-center py-8">Aucun message.</p>}
       </div>
     </AdminLayout>
   );
