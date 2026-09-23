@@ -13,7 +13,7 @@ from app.deps import require_permission
 from app.email_sender import send_recap_email
 from app.models import Admin, GameAnswer, GamePlayer, GameSession
 from app.pdf import build_player_recap_pdf, build_session_recap_pdf
-from app.recap import build_player_result
+from app.recap import build_player_result, get_session_top3
 from app.schemas import (
     GameSessionDetail,
     GameSessionSummary,
@@ -182,7 +182,8 @@ async def resend_player_email(
         raise HTTPException(status_code=400, detail="Aucune adresse email pour ce joueur")
 
     result = build_player_result(db, player)
-    pdf_bytes = build_player_recap_pdf(result, party_title=get_settings().app_name)
+    top3 = get_session_top3(db, player.session_id) if player.session_id else []
+    pdf_bytes = build_player_recap_pdf(result, party_title=get_settings().app_name, top3=top3)
     sent = await asyncio.to_thread(
         send_recap_email, target, player.nickname, pdf_bytes, get_settings().app_name
     )
@@ -205,7 +206,8 @@ def player_recap_pdf(player_id: str, db: Session = Depends(get_db)):
     if player is None:
         raise HTTPException(status_code=404, detail="Joueur introuvable")
     result = build_player_result(db, player)
-    pdf_bytes = build_player_recap_pdf(result)
+    top3 = get_session_top3(db, player.session_id) if player.session_id else []
+    pdf_bytes = build_player_recap_pdf(result, party_title=get_settings().app_name, top3=top3)
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",

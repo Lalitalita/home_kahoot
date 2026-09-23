@@ -13,7 +13,7 @@ from app.database import SessionLocal
 from app.email_sender import send_recap_email, send_session_recap_email
 from app.models import GameAnswer, GamePlayer, GameSession, Question, QuestionStatus
 from app.pdf import build_player_recap_pdf, build_session_recap_pdf
-from app.recap import build_player_result
+from app.recap import build_player_result, get_session_top3
 from app.schemas import GameSessionDetail
 from app.ws_manager import manager
 
@@ -256,7 +256,8 @@ class QuizEngine:
                     if db_player is None or not db_player.email:
                         continue
                     result = build_player_result(db, db_player)
-                    pdf_bytes = build_player_recap_pdf(result, party_title=settings.app_name)
+                    top3 = get_session_top3(db, self.state.session_id)
+                    pdf_bytes = build_player_recap_pdf(result, party_title=settings.app_name, top3=top3)
                     sent = await asyncio.to_thread(
                         send_recap_email,
                         db_player.email,

@@ -81,8 +81,7 @@ _muted_style = ParagraphStyle(
 
 class HeaderBanner(Flowable):
     """The colored title band at the top of every recap — a true
-    rounded-corner rectangle (reportlab tables can't do that), with a
-    thin magenta accent along the bottom edge."""
+    rounded-corner rectangle (reportlab tables can't do that)."""
 
     def __init__(self, title: str, subtitle: str, width: float = PAGE_WIDTH, height: float = 3.1 * cm):
         super().__init__()
@@ -99,8 +98,6 @@ class HeaderBanner(Flowable):
         c.saveState()
         c.setFillColor(CYAN_DARK)
         c.roundRect(0, 0, self.width, self.height, 14, fill=1, stroke=0)
-        c.setFillColor(MAGENTA)
-        c.roundRect(0, 0, self.width, 0.16 * cm, 0, fill=1, stroke=0)
 
         c.setFillColor(WHITE)
         c.setFont(DISPLAY_FONT, 23)
@@ -286,7 +283,9 @@ def _podium_flowables(players: list[PlayerResult]) -> list:
     ]
 
 
-def build_player_recap_pdf(player: PlayerResult, party_title: str = "C'est la fête") -> bytes:
+def build_player_recap_pdf(
+    player: PlayerResult, party_title: str = "C'est la fête", top3: list[PlayerResult] | None = None
+) -> bytes:
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, **PAGE_MARGINS)
     correct_count = sum(1 for a in player.answers if a.is_correct)
@@ -302,6 +301,9 @@ def build_player_recap_pdf(player: PlayerResult, party_title: str = "C'est la f�
         story.append(_player_answers_table(player))
     else:
         story.append(Paragraph("Aucune réponse enregistrée pour cette session.", _muted_style))
+
+    if top3:
+        story.extend(_podium_flowables(top3))
 
     doc.build(story, onFirstPage=_page_background, onLaterPages=_page_background)
     return buffer.getvalue()
@@ -359,8 +361,6 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
         else:
             story.append(Paragraph("Aucune réponse enregistrée.", _muted_style))
         story.append(Spacer(1, 4))
-
-    story.extend(_podium_flowables(session.players))
 
     doc.build(story, onFirstPage=_page_background, onLaterPages=_page_background)
     return buffer.getvalue()

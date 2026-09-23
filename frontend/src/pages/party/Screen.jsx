@@ -234,8 +234,10 @@ function LeaderboardView({ state }) {
 function FinishedView({ state }) {
   const top3 = state.top3 || [];
   const order = [1, 0, 2].filter((i) => top3[i]);
-  const heights = ["h-40", "h-56", "h-28"];
-  const medals = ["🥈", "🥇", "🥉"];
+  // Indexed by rank (0 = 1st place, 1 = 2nd, 2 = 3rd) — not by display
+  // position, since `order` puts 1st place in the visual middle.
+  const heights = ["h-56", "h-40", "h-28"];
+  const medals = ["🥇", "🥈", "🥉"];
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8">

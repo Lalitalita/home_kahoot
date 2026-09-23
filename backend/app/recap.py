@@ -60,3 +60,21 @@ def build_player_result(db: Session, player: GamePlayer) -> PlayerResult:
         recap_emailed_at=player.recap_emailed_at,
         answers=answers,
     )
+
+
+def get_session_top3(db: Session, session_id: str, limit: int = 3) -> list[PlayerResult]:
+    """Name + score only for the session's top players — enough for the
+    podium on each player's own recap, without computing every one of
+    their full question-by-question breakdowns like build_player_result
+    does (which the podium doesn't need)."""
+    top_players = (
+        db.query(GamePlayer)
+        .filter(GamePlayer.session_id == session_id)
+        .order_by(GamePlayer.score.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        PlayerResult(player_id=p.id, nickname=p.nickname, score=p.score, answers=[])
+        for p in top_players
+    ]
