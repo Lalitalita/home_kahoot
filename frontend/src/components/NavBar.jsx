@@ -9,7 +9,7 @@ const links = [
 
 export default function NavBar() {
   return (
-    <nav className="sticky top-0 z-40 bg-[#fbf6f1]/90 backdrop-blur-sm border-b border-stone-200">
+    <nav className="sticky top-0 z-40 bg-ink-950/90 backdrop-blur-sm border-b border-ink-700">
       <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto">
         <span className="text-lg mr-2 shrink-0">🎂</span>
         {links.map((l) => (
@@ -21,7 +21,7 @@ export default function NavBar() {
               `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
                 isActive
                   ? "bg-party-600 text-white"
-                  : "text-stone-500 hover:text-stone-900 hover:bg-stone-100"
+                  : "text-ink-400 hover:text-ink-50 hover:bg-ink-800"
               }`
             }
           >

@@ -108,12 +108,12 @@ function Stat({ label, value, highlight, danger }) {
     <div>
       <div
         className={`text-lg font-semibold ${
-          danger ? "text-rose-600" : highlight ? "text-party-600" : "text-stone-900"
+          danger ? "text-rose-600" : highlight ? "text-party-600" : "text-ink-50"
         }`}
       >
         {value}
       </div>
-      <div className="text-xs text-stone-400">{label}</div>
+      <div className="text-xs text-ink-500">{label}</div>
     </div>
   );
 }
@@ -155,8 +155,8 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
   return (
     <div className="mb-8">
       <div className="flex items-baseline justify-between mb-3">
-        <h2 className="text-xl font-semibold text-stone-900">{title}</h2>
-        <span className="text-sm text-stone-500">Sous-total : {formatEuro(total)}</span>
+        <h2 className="text-xl font-semibold text-ink-50">{title}</h2>
+        <span className="text-sm text-ink-400">Sous-total : {formatEuro(total)}</span>
       </div>
 
       <form
@@ -201,7 +201,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
 
       <div className="overflow-x-auto card p-0">
         <table className="w-full text-sm">
-          <thead className="text-left text-stone-400 border-b border-stone-200">
+          <thead className="text-left text-ink-500 border-b border-ink-700">
             <tr>
               <th className="p-3">Fait</th>
               <th className="p-3">Nom</th>
@@ -215,7 +215,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
           </thead>
           <tbody>
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-stone-100 align-top">
+              <tr key={item.id} className="border-b border-ink-800 align-top">
                 <td className="p-3">
                   <input
                     type="checkbox"
@@ -224,7 +224,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
                     className="w-5 h-5 accent-party-500"
                   />
                 </td>
-                <td className={`p-3 ${item.is_done ? "text-stone-400 line-through" : ""}`}>
+                <td className={`p-3 ${item.is_done ? "text-ink-500 line-through" : ""}`}>
                   <EditableCell value={item.name} onSave={(v) => updateField(item, "name", v)} />
                 </td>
                 <td className="p-3 w-24">
@@ -232,14 +232,14 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
                     value={String(item.price)}
                     onSave={(v) => updateField(item, "price", Number(v) || 0)}
                   />
-                  <span className="text-xs text-stone-400"> €</span>
+                  <span className="text-xs text-ink-500"> €</span>
                 </td>
                 <td className="p-3 w-28">
                   <EditableCell
                     value={item.prep_time_minutes != null ? String(item.prep_time_minutes) : ""}
                     onSave={(v) => updateField(item, "prep_time_minutes", v === "" ? null : Number(v))}
                   />
-                  <span className="text-xs text-stone-400"> min</span>
+                  <span className="text-xs text-ink-500"> min</span>
                 </td>
                 {showAllergens && (
                   <td className="p-3 max-w-[10rem]">
@@ -254,7 +254,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
                     <AllergyCompat item={item} />
                   </td>
                 )}
-                <td className="p-3 max-w-[12rem] text-stone-500">
+                <td className="p-3 max-w-[12rem] text-ink-400">
                   <EditableCell
                     value={item.notes || ""}
                     onSave={(v) => updateField(item, "notes", v || null)}
@@ -272,7 +272,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={showAllergens ? 8 : 6} className="p-6 text-center text-stone-400">
+                <td colSpan={showAllergens ? 8 : 6} className="p-6 text-center text-ink-500">
                   Rien pour l'instant.
                 </td>
               </tr>
@@ -286,7 +286,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
 
 function AllergyCompat({ item }) {
   if (!item.allergens) {
-    return <span className="text-stone-300 text-xs">—</span>;
+    return <span className="text-ink-600 text-xs">—</span>;
   }
   if (item.conflicts.length === 0) {
     return <span className="text-emerald-600 text-xs">Convient à tous</span>;
@@ -309,7 +309,7 @@ function EditableCell({ value, onSave }) {
   if (!editing) {
     return (
       <span className="cursor-pointer hover:text-party-600" onClick={() => setEditing(true)}>
-        {value || <span className="text-stone-300">—</span>}
+        {value || <span className="text-ink-600">—</span>}
       </span>
     );
   }

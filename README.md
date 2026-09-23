@@ -16,6 +16,11 @@ messages en bonus.
 - Liste des invités consultable par tous (nom, pseudo, photo, petite description)
 - Fiche perso par invité (allergies, régime, intolérances, commentaire), éditable via un lien/code personnel
 - Tableau récapitulatif admin des régimes alimentaires
+- Budget & listes : activités et nourriture avec prix, temps de préparation, et détection
+  automatique des allergènes qui posent problème à un invité
+- Planning de la journée : activités, préparation des repas et pauses, avec les horaires
+  recalculés automatiquement à partir d'une heure de début (et des heures fixes épinglables,
+  ex. arrivée des invités)
 - Propositions de questions de quiz par les invités (texte, 4 réponses, image optionnelle)
 - Modération des questions par l'admin (accepter / modifier / supprimer)
 - Mur de messages (texte + photos), visible avant et après la soirée
@@ -28,6 +33,14 @@ messages en bonus.
 - Réponses envoyées en temps réel via WebSocket
 - Score basé sur la bonne réponse **et** la rapidité
 - Classement en direct + podium top 3 animé en fin de partie
+- Chaque invité peut télécharger son récap personnel en PDF (ses réponses vs. les bonnes)
+
+**Après la soirée (ou après un essai)**
+- Chaque lancement du quiz crée une **session** séparée : tu peux faire plusieurs essais
+  avant la vraie soirée sans mélanger les résultats
+- Page Admin → Résultats : classement et détail question par question de chaque session,
+  consultable directement dans l'interface
+- Export CSV ou PDF des résultats complets d'une session
 
 **Sécurité admin**
 - Authentification par mot de passe + **double authentification (TOTP/2FA)** obligatoire dès la première connexion (compatible Google Authenticator, Aegis, Authy, etc.)

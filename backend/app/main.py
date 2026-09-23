@@ -15,6 +15,8 @@ from app.routers import (
     messages,
     questions,
     quiz_ws,
+    results,
+    schedule,
     settings as settings_router,
 )
 from app.security import hash_password
@@ -59,6 +61,8 @@ app.include_router(questions.router)
 app.include_router(messages.router)
 app.include_router(settings_router.router)
 app.include_router(budget.router)
+app.include_router(schedule.router)
+app.include_router(results.router)
 app.include_router(export.router)
 app.include_router(quiz_ws.router)
 app.include_router(quiz_ws.control_router)

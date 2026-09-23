@@ -88,7 +88,7 @@ export default function AdminGuests() {
 
       <div className="overflow-x-auto card p-0">
         <table className="w-full text-sm">
-          <thead className="text-left text-stone-400 border-b border-stone-200">
+          <thead className="text-left text-ink-500 border-b border-ink-700">
             <tr>
               <th className="p-3">Nom</th>
               <th className="p-3">Pseudo</th>
@@ -108,7 +108,7 @@ export default function AdminGuests() {
           </thead>
           <tbody>
             {guests.map((g) => (
-              <tr key={g.id} className="border-b border-stone-100">
+              <tr key={g.id} className="border-b border-ink-800">
                 <td className="p-3">
                   <EditableCell value={g.name} onSave={(v) => handleUpdate(g, "name", v)} />
                 </td>
@@ -132,11 +132,11 @@ export default function AdminGuests() {
                     <td className="p-3 text-amber-600">{g.allergies || "-"}</td>
                     <td className="p-3">{g.diet || "-"}</td>
                     <td className="p-3">{g.intolerances || "-"}</td>
-                    <td className="p-3 text-stone-500 max-w-[12rem]">{g.dietary_comment || "-"}</td>
+                    <td className="p-3 text-ink-400 max-w-[12rem]">{g.dietary_comment || "-"}</td>
                   </>
                 )}
                 <td className="p-3">
-                  <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1">/invites/{g.access_code}</code>
+                  <code className="text-xs bg-ink-800 text-ink-200 rounded px-2 py-1">/invites/{g.access_code}</code>
                 </td>
                 <td className="p-3">
                   <button className="text-rose-600 hover:text-rose-500 text-xs" onClick={() => handleDelete(g.id)}>
@@ -147,7 +147,7 @@ export default function AdminGuests() {
             ))}
             {guests.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-6 text-center text-stone-400">
+                <td colSpan={10} className="p-6 text-center text-ink-500">
                   Aucun invité pour l'instant.
                 </td>
               </tr>
@@ -166,7 +166,7 @@ function EditableCell({ value, onSave }) {
   if (!editing) {
     return (
       <span className="cursor-pointer hover:text-party-600" onClick={() => setEditing(true)}>
-        {value || <span className="text-stone-300">—</span>}
+        {value || <span className="text-ink-600">—</span>}
       </span>
     );
   }

@@ -62,7 +62,7 @@ export default function Controller() {
   const myScore = myRank >= 0 ? state.leaderboard[myRank].score : 0;
 
   return (
-    <div className="min-h-screen flex flex-col p-4 bg-slate-950">
+    <div className="min-h-screen flex flex-col p-4 bg-ink-950">
       <div className="flex items-center justify-between mb-4">
         <span className="text-white font-semibold">👤 {nickname}</span>
         <span className={`text-xs ${connected ? "text-green-400" : "text-red-400"}`}>
@@ -74,12 +74,12 @@ export default function Controller() {
         {!state || phase === "lobby" ? (
           <div className="space-y-3">
             <div className="text-5xl animate-pulse">⏳</div>
-            <p className="text-slate-300 text-lg">En attente du début du quiz...</p>
-            <p className="text-slate-500 text-sm">Regarde l'écran principal !</p>
+            <p className="text-ink-200 text-lg">En attente du début du quiz...</p>
+            <p className="text-ink-500 text-sm">Regarde l'écran principal !</p>
           </div>
         ) : phase === "question" && !hasAnswered ? (
           <div className="w-full max-w-sm">
-            <p className="text-slate-400 mb-4">Choisis ta réponse :</p>
+            <p className="text-ink-400 mb-4">Choisis ta réponse :</p>
             <div className="grid grid-cols-2 gap-3">
               {CHOICE_STYLES.map((style, i) => (
                 <button
@@ -95,8 +95,8 @@ export default function Controller() {
         ) : phase === "question" && hasAnswered ? (
           <div className="space-y-3">
             <div className="text-5xl animate-bounce">✅</div>
-            <p className="text-slate-300 text-lg">Réponse envoyée !</p>
-            <p className="text-slate-500 text-sm">On attend les autres...</p>
+            <p className="text-ink-200 text-lg">Réponse envoyée !</p>
+            <p className="text-ink-500 text-sm">On attend les autres...</p>
           </div>
         ) : phase === "reveal" ? (
           <div className="space-y-3">
@@ -111,13 +111,13 @@ export default function Controller() {
                 )}
               </>
             ) : (
-              <p className="text-slate-400">Temps écoulé, tu n'as pas répondu à temps.</p>
+              <p className="text-ink-400">Temps écoulé, tu n'as pas répondu à temps.</p>
             )}
           </div>
         ) : phase === "leaderboard" ? (
           <div className="space-y-2">
             <div className="text-5xl">🏆</div>
-            <p className="text-slate-300">Ton classement</p>
+            <p className="text-ink-200">Ton classement</p>
             <p className="text-4xl font-bold text-white">
               {myRank >= 0 ? `#${myRank + 1}` : "-"}
             </p>
@@ -137,13 +137,22 @@ function FinalResult({ playerId, state }) {
   const isTop3 = rank >= 0;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {isTop3 && <Confetti />}
       <div className="text-6xl">{isTop3 ? "🏆" : "🎉"}</div>
       <p className="text-2xl font-bold text-white">
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}
       </p>
-      <p className="text-slate-400">Le classement final est affiché sur l'écran.</p>
+      <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
+      {playerId && (
+        <a
+          href={`/api/players/${playerId}/recap.pdf`}
+          className="btn-primary inline-block"
+          download
+        >
+          Télécharger mon récap (PDF)
+        </a>
+      )}
     </div>
   );
 }

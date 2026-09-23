@@ -52,7 +52,7 @@ export const api = {
   delete: (path, opts) => request(path, { ...opts, method: "DELETE" }),
 };
 
-export async function downloadCsv(path, filename) {
+export async function downloadFile(path, filename) {
   const token = getToken();
   const res = await fetch(path, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -68,3 +68,6 @@ export async function downloadCsv(path, filename) {
   a.remove();
   window.URL.revokeObjectURL(url);
 }
+
+// Kept as an alias: earlier admin pages import this name for CSV exports.
+export const downloadCsv = downloadFile;

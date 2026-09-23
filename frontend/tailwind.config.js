@@ -4,10 +4,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Warm terracotta accent — used everywhere the app used to use a
-        // saturated magenta/purple. Kept under the same token name
-        // ("party") so it applies wherever the class is already used,
-        // including the live-quiz screens.
+        // Warm terracotta accent — the app's single accent color, used on
+        // both surfaces below.
         party: {
           50: "#fdf6f2",
           100: "#faeade",
@@ -21,9 +19,34 @@ export default {
           900: "#5e3320",
           950: "#331a10",
         },
+        // Warm dark neutrals (brown-black, never blue-slate) for the
+        // "cozy evening" surfaces: page background, cards, borders, text.
+        ink: {
+          50: "#f6f0e8",
+          100: "#e9dfd2",
+          200: "#cfc0ac",
+          300: "#ab9880",
+          400: "#8a7660",
+          500: "#6b5946",
+          600: "#4f4133",
+          700: "#3a2f25",
+          800: "#291f18",
+          850: "#20180f",
+          900: "#1a130d",
+          950: "#120d08",
+        },
       },
       fontFamily: {
         display: ["'Baloo 2'", "system-ui", "sans-serif"],
+        serif: ["'Fraunces'", "ui-serif", "Georgia", "serif"],
+      },
+      boxShadow: {
+        cozy: "0 12px 32px -16px rgba(0,0,0,0.55)",
+        glow: "0 0 70px -20px rgba(221,146,100,0.45)",
+      },
+      backgroundImage: {
+        "warm-radial":
+          "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(221,146,100,0.16), transparent)",
       },
       keyframes: {
         "pop-in": {

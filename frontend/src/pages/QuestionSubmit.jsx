@@ -67,8 +67,8 @@ export default function QuestionSubmit() {
     <div>
       <NavBar />
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-semibold text-stone-900">Proposer une question</h1>
-        <p className="text-stone-500 text-sm">
+        <h1 className="text-2xl font-semibold text-ink-50">Proposer une question</h1>
+        <p className="text-ink-400 text-sm">
           Propose une question à choix multiple (4 réponses). L'organisateur validera ta question
           avant de l'ajouter au quiz de la soirée.
         </p>
@@ -112,7 +112,7 @@ export default function QuestionSubmit() {
               />
             </div>
           ))}
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-ink-500">
             Sélectionne le rond à côté de la bonne réponse.
           </p>
 
@@ -126,10 +126,10 @@ export default function QuestionSubmit() {
 
         {code && mine.length > 0 && (
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-stone-900">Mes questions proposées</h2>
+            <h2 className="text-lg font-semibold text-ink-50">Mes questions proposées</h2>
             {mine.map((q) => (
               <div key={q.id} className="card">
-                <p className="text-stone-900">{q.text}</p>
+                <p className="text-ink-50">{q.text}</p>
                 <p className={`text-sm mt-1 ${STATUS_LABEL[q.status].cls}`}>
                   {STATUS_LABEL[q.status].text}
                 </p>

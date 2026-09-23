@@ -72,13 +72,13 @@ export default function GuestProfile() {
     <div>
       <NavBar />
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
-        {loading && <p className="text-stone-400">Chargement...</p>}
+        {loading && <p className="text-ink-500">Chargement...</p>}
         {error && !guest && <p className="text-rose-600">{error}</p>}
 
         {guest && (
           <>
             <div className="card flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-stone-100 shrink-0 flex items-center justify-center text-3xl">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-ink-800 shrink-0 flex items-center justify-center text-3xl">
                 {guest.photo_url ? (
                   <img src={guest.photo_url} className="w-full h-full object-cover" alt="" />
                 ) : (
@@ -86,9 +86,9 @@ export default function GuestProfile() {
                 )}
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-stone-900">{guest.name}</h1>
+                <h1 className="text-xl font-semibold text-ink-50">{guest.name}</h1>
                 {guest.description && (
-                  <p className="text-sm text-stone-500">{guest.description}</p>
+                  <p className="text-sm text-ink-400">{guest.description}</p>
                 )}
                 <label className="text-xs text-party-600 cursor-pointer mt-1 inline-block">
                   Changer la photo
@@ -98,7 +98,7 @@ export default function GuestProfile() {
             </div>
 
             <form onSubmit={handleSubmit} className="card space-y-4">
-              <h2 className="text-lg font-semibold text-stone-900">Mes informations</h2>
+              <h2 className="text-lg font-semibold text-ink-50">Mes informations</h2>
 
               <div>
                 <label className="label">Pseudo (facultatif)</label>

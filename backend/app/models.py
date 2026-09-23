@@ -123,9 +123,37 @@ class AppSettings(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default="singleton")
     party_mode_active: Mapped[bool] = mapped_column(Boolean, default=False)
     budget_target: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # "HH:MM" — what time the day's schedule starts counting from.
+    day_start_time: Mapped[str] = mapped_column(String, default="10:00")
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
+
+
+class ScheduleItemType(str, enum.Enum):
+    activity = "activity"
+    meal_prep = "meal_prep"
+    break_ = "break"
+
+
+class ScheduleItem(Base):
+    """One block of the day's run-of-show: an activity, a meal-prep task,
+    or a break. Ordered by order_index; the actual clock time each block
+    starts at is computed on the frontend from AppSettings.day_start_time
+    plus the cumulative duration of everything before it, unless the item
+    pins its own fixed_start_time (e.g. "guests arrive at 18:00")."""
+
+    __tablename__ = "schedule_items"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    type: Mapped[ScheduleItemType] = mapped_column(Enum(ScheduleItemType))
+    title: Mapped[str] = mapped_column(String)
+    duration_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    # "HH:MM" or None — reanchors the running clock at this block.
+    fixed_start_time: Mapped[str | None] = mapped_column(String, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class BudgetCategory(str, enum.Enum):
@@ -152,6 +180,19 @@ class BudgetItem(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class GameSession(Base):
+    """One run of the live quiz — the admin starts a new one each time
+    they hit "Réinitialiser"/"Démarrer", so test runs before the party
+    and the real thing each get their own separate results."""
+
+    __tablename__ = "game_sessions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    label: Mapped[str] = mapped_column(String, default="Session")
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
 class GamePlayer(Base):
     """A record of someone who joined the live quiz. Kept for the final
     scoreboard/export even after the party is over."""
@@ -159,6 +200,9 @@ class GamePlayer(Base):
     __tablename__ = "game_players"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    session_id: Mapped[str | None] = mapped_column(
+        ForeignKey("game_sessions.id", ondelete="CASCADE"), nullable=True
+    )
     nickname: Mapped[str] = mapped_column(String)
     guest_id: Mapped[str | None] = mapped_column(
         ForeignKey("guests.id", ondelete="SET NULL"), nullable=True

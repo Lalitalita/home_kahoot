@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
@@ -42,13 +43,22 @@ export default function AdminPartyControl() {
     }
   }
 
-  async function callControl(action) {
+  async function callControl(action, body = {}) {
     setBusy(true);
     try {
-      await api.post(`/api/admin/quiz/${action}`, {}, { auth: true });
+      await api.post(`/api/admin/quiz/${action}`, body, { auth: true });
     } finally {
       setBusy(false);
     }
+  }
+
+  function startNewSession() {
+    const label = window.prompt(
+      "Nom de cette session (optionnel, ex : \"Test 1\", \"Soirée réelle\")",
+      ""
+    );
+    if (label === null) return; // cancelled
+    callControl("reset", { label: label.trim() || null });
   }
 
   const origin = window.location.origin;
@@ -57,8 +67,8 @@ export default function AdminPartyControl() {
     <AdminLayout title="Mode soirée">
       <div className="card mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-semibold text-stone-900">Basculer l'application en mode soirée</h2>
-          <p className="text-sm text-stone-500">
+          <h2 className="font-semibold text-ink-50">Basculer l'application en mode soirée</h2>
+          <p className="text-sm text-ink-400">
             Ferme les pages de préparation et réinitialise le quiz avec les questions acceptées.
           </p>
         </div>
@@ -78,18 +88,18 @@ export default function AdminPartyControl() {
         <>
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="card">
-              <h3 className="font-semibold text-stone-900 mb-2">Écran TV</h3>
-              <p className="text-sm text-stone-500 mb-2">
+              <h3 className="font-semibold text-ink-50 mb-2">Écran TV</h3>
+              <p className="text-sm text-ink-400 mb-2">
                 À afficher sur la télé/le vidéoprojecteur.
               </p>
-              <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1 block break-all">
+              <code className="text-xs bg-ink-800 text-ink-200 rounded px-2 py-1 block break-all">
                 {origin}/soiree/ecran
               </code>
             </div>
             <div className="card">
-              <h3 className="font-semibold text-stone-900 mb-2">Rejoindre (invités)</h3>
-              <p className="text-sm text-stone-500 mb-2">À partager avec tout le monde.</p>
-              <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1 block break-all">
+              <h3 className="font-semibold text-ink-50 mb-2">Rejoindre (invités)</h3>
+              <p className="text-sm text-ink-400 mb-2">À partager avec tout le monde.</p>
+              <code className="text-xs bg-ink-800 text-ink-200 rounded px-2 py-1 block break-all">
                 {origin}/soiree
               </code>
             </div>
@@ -98,19 +108,19 @@ export default function AdminPartyControl() {
           <div className="card space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h3 className="font-semibold text-stone-900">
+                <h3 className="font-semibold text-ink-50">
                   {state ? PHASE_LABEL[state.phase] : "Connexion..."}
                 </h3>
                 {state && (
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-ink-400">
                     {state.players_count} joueur(s) connecté(s) · Question{" "}
                     {Math.min(state.question_index + 1, state.total_questions)}/{state.total_questions}
                   </p>
                 )}
               </div>
               <div className="flex gap-2">
-                <button className="btn-secondary" disabled={busy} onClick={() => callControl("reset")}>
-                  Réinitialiser
+                <button className="btn-secondary" disabled={busy} onClick={startNewSession}>
+                  Nouvelle session
                 </button>
                 {state?.phase === "lobby" && (
                   <button className="btn-primary" disabled={busy} onClick={() => callControl("start")}>
@@ -126,17 +136,17 @@ export default function AdminPartyControl() {
             </div>
 
             {state?.question && (
-              <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
-                <p className="text-stone-900 font-medium">{state.question.text}</p>
+              <div className="bg-ink-800 border border-ink-700 rounded-xl p-4">
+                <p className="text-ink-50 font-medium">{state.question.text}</p>
               </div>
             )}
 
             {state?.leaderboard?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-stone-500 mb-2">Classement</h4>
+                <h4 className="text-sm font-semibold text-ink-400 mb-2">Classement</h4>
                 <ol className="space-y-1">
                   {state.leaderboard.map((p, i) => (
-                    <li key={p.player_id} className="flex justify-between text-sm text-stone-600">
+                    <li key={p.player_id} className="flex justify-between text-sm text-ink-200">
                       <span>
                         {i + 1}. {p.nickname}
                       </span>
@@ -145,6 +155,12 @@ export default function AdminPartyControl() {
                   ))}
                 </ol>
               </div>
+            )}
+
+            {state?.phase === "finished" && (
+              <Link to="/admin/resultats" className="btn-secondary inline-block">
+                Voir les résultats détaillés →
+              </Link>
             )}
           </div>
         </>

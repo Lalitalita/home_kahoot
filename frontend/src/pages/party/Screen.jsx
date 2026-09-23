@@ -30,9 +30,9 @@ export default function Screen() {
   const phase = state?.phase;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-party-950 text-white flex flex-col p-8 overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-ink-950 via-ink-900 to-party-950 text-white flex flex-col p-8 overflow-hidden">
       {!connected && (
-        <div className="fixed top-3 right-3 text-xs text-red-400 bg-slate-900/80 px-3 py-1 rounded-full">
+        <div className="fixed top-3 right-3 text-xs text-red-400 bg-ink-900/80 px-3 py-1 rounded-full">
           Connexion au serveur...
         </div>
       )}
@@ -57,15 +57,15 @@ function Lobby({ state }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
       <h1 className="font-display text-6xl font-extrabold">🎉 Quiz d'anniversaire 🎉</h1>
-      <p className="text-2xl text-slate-300">
+      <p className="text-2xl text-ink-200">
         Rejoins sur <span className="font-mono text-party-400">{origin}/soiree</span>
       </p>
-      <div className="text-xl text-slate-400">
+      <div className="text-xl text-ink-400">
         {state?.players_count ?? 0} participant(s) connecté(s)
       </div>
       <div className="flex flex-wrap gap-3 justify-center max-w-3xl">
         {(state?.leaderboard || []).map((p) => (
-          <span key={p.player_id} className="bg-slate-800 rounded-full px-4 py-2 text-lg animate-pop-in">
+          <span key={p.player_id} className="bg-ink-800 rounded-full px-4 py-2 text-lg animate-pop-in">
             {p.nickname}
           </span>
         ))}
@@ -90,7 +90,7 @@ function Timer({ startedAt, durationSeconds }) {
   }, [startedAt, durationSeconds]);
 
   return (
-    <div className="w-full h-4 bg-slate-800 rounded-full overflow-hidden">
+    <div className="w-full h-4 bg-ink-800 rounded-full overflow-hidden">
       <div
         className={`h-full transition-[width] duration-100 ${
           progress > 0.3 ? "bg-party-500" : "bg-red-500"
@@ -105,7 +105,7 @@ function QuestionView({ state }) {
   const q = state.question;
   return (
     <div className="flex-1 flex flex-col">
-      <div className="text-center text-slate-400 mb-2">
+      <div className="text-center text-ink-400 mb-2">
         Question {state.question_index + 1} / {state.total_questions}
       </div>
       <Timer startedAt={q.started_at} durationSeconds={q.time_limit_seconds} />
@@ -148,9 +148,9 @@ function RevealView({ state }) {
               <span className={`${CHOICE_STYLES[i].bg} rounded-xl w-10 h-10 flex items-center justify-center text-xl shrink-0`}>
                 {CHOICE_STYLES[i].shape}
               </span>
-              <div className="flex-1 bg-slate-800 rounded-xl overflow-hidden relative h-10">
+              <div className="flex-1 bg-ink-800 rounded-xl overflow-hidden relative h-10">
                 <div
-                  className={`h-full ${isCorrect ? "bg-green-500" : "bg-slate-600"} transition-all duration-700`}
+                  className={`h-full ${isCorrect ? "bg-green-500" : "bg-ink-600"} transition-all duration-700`}
                   style={{ width: `${pct}%` }}
                 />
                 <span className="absolute inset-0 flex items-center px-3 text-sm font-medium">
@@ -180,7 +180,7 @@ function LeaderboardView({ state }) {
                 ? "bg-slate-300 text-slate-950 font-bold"
                 : i === 2
                 ? "bg-amber-700 text-white font-bold"
-                : "bg-slate-800"
+                : "bg-ink-800"
             }`}
             style={{ animationDelay: `${i * 0.1}s` }}
           >
