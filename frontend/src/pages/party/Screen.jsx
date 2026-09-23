@@ -87,6 +87,7 @@ function Lobby({ state }) {
 
 function Timer({ startedAt, durationSeconds }) {
   const [progress, setProgress] = useState(1);
+  const [secondsLeft, setSecondsLeft] = useState(Math.ceil(durationSeconds));
 
   useEffect(() => {
     let raf;
@@ -94,6 +95,7 @@ function Timer({ startedAt, durationSeconds }) {
       const elapsed = Date.now() / 1000 - startedAt;
       const remaining = Math.max(0, 1 - elapsed / durationSeconds);
       setProgress(remaining);
+      setSecondsLeft(Math.max(0, Math.ceil(durationSeconds - elapsed)));
       if (remaining > 0) raf = requestAnimationFrame(tick);
     }
     tick();
@@ -101,13 +103,19 @@ function Timer({ startedAt, durationSeconds }) {
   }, [startedAt, durationSeconds]);
 
   return (
-    <div className="w-full h-4 bg-ink-800 rounded-full overflow-hidden">
-      <div
-        className={`h-full transition-[width] duration-100 ${
-          progress > 0.3 ? "bg-party-500" : "bg-red-500"
-        }`}
-        style={{ width: `${progress * 100}%` }}
-      />
+    <div className="max-w-md mx-auto w-full flex items-center gap-3">
+      <span className="text-xl shrink-0" aria-hidden="true">
+        ⏱️
+      </span>
+      <div className="flex-1 h-2.5 bg-ink-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full transition-[width] duration-100 ${
+            progress > 0.3 ? "bg-party-500" : "bg-red-500"
+          }`}
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+      <span className="font-mono text-sm text-ink-300 w-6 text-right shrink-0">{secondsLeft}</span>
     </div>
   );
 }

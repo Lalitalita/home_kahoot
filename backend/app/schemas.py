@@ -242,6 +242,17 @@ class MessagePublic(BaseModel):
 
 class AppSettingsPublic(BaseModel):
     party_mode_active: bool
+    party_location_name: str | None = None
+    party_address: str | None = None
+    party_date: str | None = None
+    party_time: str | None = None
+
+
+class PartyInfoUpdate(BaseModel):
+    party_location_name: str | None = None
+    party_address: str | None = None
+    party_date: str | None = None
+    party_time: str | None = None
 
 
 # ---------- Budget & lists ----------

@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 import { api } from "../api.js";
+import EventInfoCard from "../components/EventInfoCard.jsx";
 import NavBar from "../components/NavBar.jsx";
+import { setStoredGuestCode } from "../guestCode.js";
 
 export default function GuestProfile() {
   const { accessCode } = useParams();
@@ -21,6 +23,9 @@ export default function GuestProfile() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
+    // So a guest who opens their personal link directly is recognized on
+    // the home page too, and never has to retype their code again.
+    setStoredGuestCode(accessCode);
     api
       .get(`/api/guests/me/${accessCode}`)
       .then((g) => {
@@ -71,12 +76,14 @@ export default function GuestProfile() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {loading && <p className="text-ink-500">Chargement...</p>}
         {error && !guest && <p className="text-rose-600">{error}</p>}
 
         {guest && (
           <>
+            <EventInfoCard />
+
             <div className="card flex items-center gap-4">
               <div className="w-20 h-20 rounded-full overflow-hidden bg-ink-800 shrink-0 flex items-center justify-center text-3xl">
                 {guest.photo_url ? (
@@ -100,54 +107,56 @@ export default function GuestProfile() {
             <form onSubmit={handleSubmit} className="card space-y-4">
               <h2 className="text-lg font-semibold text-ink-50">Mes informations</h2>
 
-              <div>
-                <label className="label">Pseudo (facultatif)</label>
-                <input
-                  className="input"
-                  value={form.pseudo}
-                  onChange={(e) => setForm({ ...form, pseudo: e.target.value })}
-                  placeholder="Comment on t'appelle ?"
-                />
-              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Pseudo (facultatif)</label>
+                  <input
+                    className="input"
+                    value={form.pseudo}
+                    onChange={(e) => setForm({ ...form, pseudo: e.target.value })}
+                    placeholder="Comment on t'appelle ?"
+                  />
+                </div>
 
-              <div>
-                <label className="label">Je ramène... (facultatif)</label>
-                <input
-                  className="input"
-                  value={form.bringing_item}
-                  onChange={(e) => setForm({ ...form, bringing_item: e.target.value })}
-                  placeholder="Ex : des chaises, des enceintes, un gâteau..."
-                />
-              </div>
+                <div>
+                  <label className="label">Je ramène... (facultatif)</label>
+                  <input
+                    className="input"
+                    value={form.bringing_item}
+                    onChange={(e) => setForm({ ...form, bringing_item: e.target.value })}
+                    placeholder="Ex : des chaises, des enceintes, un gâteau..."
+                  />
+                </div>
 
-              <div>
-                <label className="label">Allergies alimentaires</label>
-                <input
-                  className="input"
-                  value={form.allergies}
-                  onChange={(e) => setForm({ ...form, allergies: e.target.value })}
-                  placeholder="Ex : arachides, fruits de mer..."
-                />
-              </div>
+                <div>
+                  <label className="label">Allergies alimentaires</label>
+                  <input
+                    className="input"
+                    value={form.allergies}
+                    onChange={(e) => setForm({ ...form, allergies: e.target.value })}
+                    placeholder="Ex : arachides, fruits de mer..."
+                  />
+                </div>
 
-              <div>
-                <label className="label">Régime alimentaire</label>
-                <input
-                  className="input"
-                  value={form.diet}
-                  onChange={(e) => setForm({ ...form, diet: e.target.value })}
-                  placeholder="Ex : végétarien, vegan, halal..."
-                />
-              </div>
+                <div>
+                  <label className="label">Régime alimentaire</label>
+                  <input
+                    className="input"
+                    value={form.diet}
+                    onChange={(e) => setForm({ ...form, diet: e.target.value })}
+                    placeholder="Ex : végétarien, vegan, halal..."
+                  />
+                </div>
 
-              <div>
-                <label className="label">Intolérances</label>
-                <input
-                  className="input"
-                  value={form.intolerances}
-                  onChange={(e) => setForm({ ...form, intolerances: e.target.value })}
-                  placeholder="Ex : lactose, gluten..."
-                />
+                <div>
+                  <label className="label">Intolérances</label>
+                  <input
+                    className="input"
+                    value={form.intolerances}
+                    onChange={(e) => setForm({ ...form, intolerances: e.target.value })}
+                    placeholder="Ex : lactose, gluten..."
+                  />
+                </div>
               </div>
 
               <div>

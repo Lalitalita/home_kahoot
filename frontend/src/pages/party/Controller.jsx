@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Confetti from "../../components/Confetti.jsx";
-import QuizProgress from "../../components/QuizProgress.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
 
@@ -70,14 +69,6 @@ export default function Controller() {
           {connected ? "Connecté" : "Reconnexion..."}
         </span>
       </div>
-
-      {state?.total_questions > 0 && phase !== "lobby" && phase !== "finished" && (
-        <QuizProgress
-          current={Math.min(state.question_index + 1, state.total_questions)}
-          total={state.total_questions}
-          className="mb-4"
-        />
-      )}
 
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         {!state || phase === "lobby" ? (

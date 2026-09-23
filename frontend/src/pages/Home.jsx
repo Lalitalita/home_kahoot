@@ -1,15 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import NavBar from "../components/NavBar.jsx";
+import EventInfoCard from "../components/EventInfoCard.jsx";
+import { getStoredGuestCode, setStoredGuestCode } from "../guestCode.js";
 
 export default function Home() {
   const [code, setCode] = useState("");
+  const [storedCode, setStoredCodeState] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const existing = getStoredGuestCode();
+    if (existing) {
+      setStoredCodeState(existing);
+      setCode(existing);
+    }
+  }, []);
 
   function goToProfile(e) {
     e.preventDefault();
-    if (code.trim()) navigate(`/invites/${code.trim()}`);
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    setStoredGuestCode(trimmed);
+    navigate(`/invites/${trimmed}`);
   }
 
   return (
@@ -24,6 +38,20 @@ export default function Home() {
             pour le quiz du soir, et retrouve-toi sur le mur de messages.
           </p>
         </div>
+
+        <EventInfoCard />
+
+        {storedCode && (
+          <div className="card flex flex-wrap items-center justify-between gap-3 border-party-500/60">
+            <div>
+              <h2 className="font-semibold text-ink-50">Bon retour !</h2>
+              <p className="text-sm text-ink-400">Ta fiche invité(e) est enregistrée sur cet appareil.</p>
+            </div>
+            <a href={`/invites/${storedCode}`} className="btn-primary shrink-0">
+              Retrouver ma fiche
+            </a>
+          </div>
+        )}
 
         <div className="card space-y-3">
           <h2 className="text-lg font-semibold text-ink-50">Ma fiche invité(e)</h2>

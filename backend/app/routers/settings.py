@@ -6,7 +6,7 @@ from app.database import get_db
 from app.deps import require_permission
 from app.models import Admin, AppSettings
 from app.quiz_engine import engine
-from app.schemas import AppSettingsPublic
+from app.schemas import AppSettingsPublic, PartyInfoUpdate
 from app.ws_manager import manager
 
 router = APIRouter(prefix="/api", tags=["settings"])
@@ -46,4 +46,18 @@ async def set_party_mode(
         await engine.reset()
 
     await manager.broadcast({"type": "party_mode", "active": payload.active})
+    return settings_row
+
+
+@router.patch("/admin/settings/party-info", response_model=AppSettingsPublic)
+def set_party_info(
+    payload: PartyInfoUpdate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_permission("planning")),
+):
+    settings_row = _get_or_create_settings(db)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(settings_row, field, value)
+    db.commit()
+    db.refresh(settings_row)
     return settings_row

@@ -40,20 +40,36 @@ function computeTimeline(dayStart, items) {
   });
 }
 
+const emptyPartyInfo = {
+  party_location_name: "",
+  party_address: "",
+  party_date: "",
+  party_time: "",
+};
+
 export default function AdminPlanning() {
   const [dayStart, setDayStart] = useState("10:00");
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState(null);
+  const [partyInfo, setPartyInfo] = useState(emptyPartyInfo);
+  const [partyInfoSaved, setPartyInfoSaved] = useState(false);
 
   function load() {
     Promise.all([
       api.get("/api/admin/schedule/day-start", { auth: true }),
       api.get("/api/admin/schedule/items", { auth: true }),
+      api.get("/api/settings"),
     ])
-      .then(([daySettings, itemsRes]) => {
+      .then(([daySettings, itemsRes, settingsRes]) => {
         setDayStart(daySettings.day_start_time);
         setItems(itemsRes);
+        setPartyInfo({
+          party_location_name: settingsRes.party_location_name || "",
+          party_address: settingsRes.party_address || "",
+          party_date: settingsRes.party_date || "",
+          party_time: settingsRes.party_time || "",
+        });
       })
       .catch((err) => setError(err.message));
   }
@@ -68,6 +84,13 @@ export default function AdminPlanning() {
       { auth: true }
     );
     setDayStart(res.day_start_time);
+  }
+
+  async function savePartyInfo(e) {
+    e.preventDefault();
+    setPartyInfoSaved(false);
+    await api.patch("/api/admin/settings/party-info", partyInfo, { auth: true });
+    setPartyInfoSaved(true);
   }
 
   async function handleCreate(e) {
@@ -109,6 +132,60 @@ export default function AdminPlanning() {
   return (
     <AdminLayout title="Planning de la journée">
       {error && <p className="text-rose-500 text-sm mb-4">{error}</p>}
+
+      <form onSubmit={savePartyInfo} className="card mb-6 space-y-3">
+        <div>
+          <h2 className="font-semibold text-ink-50">Infos à partager avec les invités</h2>
+          <p className="text-sm text-ink-500">
+            Affichées sur la page d'accueil et la fiche RSVP de chaque invité, avec des liens
+            Maps/Waze calculés à partir de l'adresse.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="label">Nom du lieu</label>
+            <input
+              className="input"
+              placeholder="Ex : Chez Lana"
+              value={partyInfo.party_location_name}
+              onChange={(e) => setPartyInfo({ ...partyInfo, party_location_name: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Adresse complète</label>
+            <input
+              className="input"
+              placeholder="Ex : 12 rue de la Fête, 75000 Paris"
+              value={partyInfo.party_address}
+              onChange={(e) => setPartyInfo({ ...partyInfo, party_address: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Date</label>
+            <input
+              type="date"
+              className="input"
+              value={partyInfo.party_date}
+              onChange={(e) => setPartyInfo({ ...partyInfo, party_date: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className="label">Heure</label>
+            <input
+              type="time"
+              className="input"
+              value={partyInfo.party_time}
+              onChange={(e) => setPartyInfo({ ...partyInfo, party_time: e.target.value })}
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="btn-secondary" type="submit">
+            Enregistrer
+          </button>
+          {partyInfoSaved && <span className="text-emerald-500 text-sm">Enregistré</span>}
+        </div>
+      </form>
 
       <div className="card mb-6 flex flex-wrap items-end gap-3">
         <form onSubmit={saveDayStart} className="flex items-end gap-2">

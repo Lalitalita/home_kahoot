@@ -27,6 +27,9 @@ BORDER = colors.HexColor("#e2e2e2")
 GREEN = colors.HexColor("#15803d")
 RED = colors.HexColor("#b91c1c")
 WHITE = colors.white
+GOLD = colors.HexColor("#c9a227")
+SILVER = colors.HexColor("#93a1ab")
+BRONZE = colors.HexColor("#a3672f")
 
 PAGE_MARGINS = dict(topMargin=1.6 * cm, bottomMargin=1.8 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
 
@@ -51,6 +54,18 @@ _section_style = ParagraphStyle(
     "RecapSection", parent=_styles["Heading2"], textColor=MAGENTA, fontSize=14, spaceBefore=16, spaceAfter=4
 )
 _footer_style = ParagraphStyle("Footer", parent=_styles["Normal"], textColor=MUTED, fontSize=8, alignment=TA_CENTER)
+_podium_name_style = ParagraphStyle(
+    "PodiumName", parent=_styles["Normal"], textColor=WHITE, fontSize=12, fontName="Helvetica-Bold", alignment=TA_CENTER
+)
+_podium_score_style = ParagraphStyle(
+    "PodiumScore", parent=_styles["Normal"], textColor=WHITE, fontSize=10, alignment=TA_CENTER
+)
+_podium_empty_style = ParagraphStyle(
+    "PodiumEmpty", parent=_styles["Normal"], textColor=WHITE, fontSize=11, alignment=TA_CENTER
+)
+_podium_label_style = ParagraphStyle(
+    "PodiumLabel", parent=_styles["Normal"], textColor=MUTED, fontSize=9, alignment=TA_CENTER, spaceBefore=5
+)
 
 
 def _title_banner(title: str, subtitle: str) -> Table:
@@ -176,6 +191,62 @@ def _player_answers_table(player: PlayerResult) -> Table:
     return table
 
 
+def _podium_section(players: list[PlayerResult]) -> list:
+    ranked = sorted(players, key=lambda p: p.score, reverse=True)
+    top3 = ranked[:3]
+    if not top3:
+        return []
+
+    # Left to right on a real podium: 2nd, 1st, 3rd. Bar height + color
+    # signal rank; VALIGN=BOTTOM keeps them anchored to a shared "ground".
+    slots = [
+        (top3[1] if len(top3) > 1 else None, "2E PLACE", SILVER, 3.0 * cm),
+        (top3[0], "1ERE PLACE", GOLD, 4.2 * cm),
+        (top3[2] if len(top3) > 2 else None, "3E PLACE", BRONZE, 2.1 * cm),
+    ]
+
+    bars = []
+    labels = []
+    for player, label, color, height in slots:
+        if player is not None:
+            content = Table(
+                [[Paragraph(player.nickname, _podium_name_style)], [Paragraph(f"{player.score} pts", _podium_score_style)]],
+                colWidths=[5.2 * cm],
+                rowHeights=[height - 1.1 * cm, 1.1 * cm],
+            )
+        else:
+            content = Table([[Paragraph("—", _podium_empty_style)]], colWidths=[5.2 * cm], rowHeights=[height])
+        content.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), color),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ]
+            )
+        )
+        bars.append(content)
+        labels.append(Paragraph(label, _podium_label_style))
+
+    podium = Table([bars, labels], colWidths=[5.4 * cm] * 3)
+    podium.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, 0), "BOTTOM"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 3),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+
+    return [
+        HRFlowable(width="100%", thickness=0.75, color=BORDER, spaceBefore=22, spaceAfter=6),
+        Paragraph("Podium", _section_style),
+        podium,
+    ]
+
+
 def build_player_recap_pdf(player: PlayerResult, party_title: str = "C'est la fête") -> bytes:
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, **PAGE_MARGINS)
@@ -239,6 +310,8 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
         else:
             story.append(Paragraph("Aucune réponse enregistrée.", _answer_style))
         story.append(Spacer(1, 4))
+
+    story.extend(_podium_section(session.players))
 
     doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buffer.getvalue()

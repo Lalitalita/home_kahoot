@@ -160,6 +160,13 @@ class AppSettings(Base):
     budget_target: Mapped[float | None] = mapped_column(Float, nullable=True)
     # "HH:MM" — what time the day's schedule starts counting from.
     day_start_time: Mapped[str] = mapped_column(String, default="10:00")
+    # Public event info shown on the home page and each guest's RSVP page.
+    party_location_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    party_address: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # "YYYY-MM-DD"
+    party_date: Mapped[str | None] = mapped_column(String, nullable=True)
+    # "HH:MM"
+    party_time: Mapped[str | None] = mapped_column(String, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
