@@ -19,6 +19,11 @@ from app.ws_manager import manager
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+# How long the reveal (correct answer + bar chart) and the leaderboard stay
+# on screen before the game moves on by itself.
+REVEAL_DISPLAY_SECONDS = 5
+LEADERBOARD_DISPLAY_SECONDS = 4
+
 
 class Phase(str, Enum):
     lobby = "lobby"
@@ -50,7 +55,10 @@ class GameState:
     players: dict[str, PlayerState] = field(default_factory=dict)
     # choice_index counts for the currently shown question, for the live bar chart
     answer_counts: dict[int, int] = field(default_factory=lambda: {0: 0, 1: 0, 2: 0, 3: 0})
-    auto_reveal_task: asyncio.Task | None = None
+    # Whichever timer is currently queued to move the game forward by
+    # itself: the per-question countdown, or the reveal/leaderboard
+    # display timers. Only one is ever pending at a time.
+    pending_task: asyncio.Task | None = None
     # Ids of questions actually shown so far this session, in order — lets
     # recaps include ones a player skipped without assuming every accepted
     # question loaded at reset time was necessarily reached.
@@ -71,7 +79,7 @@ class QuizEngine:
 
     async def reset(self, label: str | None = None) -> None:
         async with self._lock:
-            self._cancel_auto_reveal()
+            self._cancel_pending()
             with SessionLocal() as db:
                 # Commit the new session row first: committing expires every
                 # object already loaded in this Session, so the questions
@@ -151,10 +159,12 @@ class QuizEngine:
 
     async def advance(self) -> None:
         """Move the game forward one step: lobby/reveal -> next question,
-        question -> reveal, leaderboard -> next question or finished."""
+        question -> reveal, leaderboard -> next question or finished. Also
+        called by the pending timers below, so the game plays itself once
+        started — admin clicks are only needed to skip ahead early."""
         just_finished = False
         async with self._lock:
-            self._cancel_auto_reveal()
+            self._cancel_pending()
 
             if self.state.phase in (Phase.lobby, Phase.leaderboard):
                 self.state.question_index += 1
@@ -175,6 +185,11 @@ class QuizEngine:
 
         if self.state.phase == Phase.question:
             self._schedule_auto_reveal()
+        elif self.state.phase == Phase.reveal:
+            self._schedule_auto_advance(REVEAL_DISPLAY_SECONDS)
+        elif self.state.phase == Phase.leaderboard:
+            self._schedule_auto_advance(LEADERBOARD_DISPLAY_SECONDS)
+
         if just_finished:
             asyncio.create_task(self._send_recap_emails())
 
@@ -253,11 +268,11 @@ class QuizEngine:
             except Exception:
                 logger.exception("Échec de l'envoi du récap au joueur %s", player_id)
 
-    def _cancel_auto_reveal(self) -> None:
-        task = self.state.auto_reveal_task
+    def _cancel_pending(self) -> None:
+        task = self.state.pending_task
         if task is not None and not task.done():
             task.cancel()
-        self.state.auto_reveal_task = None
+        self.state.pending_task = None
 
     def _schedule_auto_reveal(self) -> None:
         question = self.current_question()
@@ -268,17 +283,57 @@ class QuizEngine:
         async def _auto():
             try:
                 await asyncio.sleep(duration + 0.5)
-                async with self._lock:
-                    if self.state.phase != Phase.question:
-                        return
-                    self._reveal()
-                await self._broadcast_state()
             except asyncio.CancelledError:
-                pass
+                return
+            self.state.pending_task = None
+            async with self._lock:
+                if self.state.phase != Phase.question:
+                    return
+                self._reveal()
+            await self._broadcast_state()
+            self._schedule_auto_advance(REVEAL_DISPLAY_SECONDS)
 
-        self.state.auto_reveal_task = asyncio.create_task(_auto())
+        self.state.pending_task = asyncio.create_task(_auto())
 
-    async def submit_answer(self, player_id: str, choice_index: int) -> dict | None:
+    def _schedule_auto_advance(self, delay: float) -> None:
+        """Queue a plain advance() after `delay` seconds — used to move on
+        from reveal to leaderboard, and from leaderboard to the next
+        question, without the admin having to click anything."""
+        self._cancel_pending()
+
+        async def _auto():
+            try:
+                await asyncio.sleep(delay)
+            except asyncio.CancelledError:
+                return
+            # Clear the reference *before* calling advance(): advance()
+            # itself calls _cancel_pending(), and since this task IS
+            # self.state.pending_task, cancelling it while it's still
+            # running (mid-await inside advance()) would abort advance()
+            # partway through. Clearing first makes that cancel a no-op.
+            self.state.pending_task = None
+            await self.advance()
+
+        self.state.pending_task = asyncio.create_task(_auto())
+
+    async def reveal_now(self) -> None:
+        """Force the transition into the reveal phase immediately (used
+        right after the answer that makes everyone_answered true).
+
+        Kept separate from submit_answer() so the caller can deliver that
+        player's own answer_result over their websocket *before* calling
+        this — otherwise the reveal-phase broadcast this triggers can reach
+        that same player first, leaving their client showing "you didn't
+        answer" for the instant before their actual result arrives."""
+        async with self._lock:
+            if self.state.phase != Phase.question:
+                return
+            self._cancel_pending()
+            self._reveal()
+        await self._broadcast_state()
+        self._schedule_auto_advance(REVEAL_DISPLAY_SECONDS)
+
+    async def submit_answer(self, player_id: str, choice_index: int) -> tuple[dict, bool] | None:
         async with self._lock:
             if self.state.phase != Phase.question:
                 return None
@@ -330,14 +385,9 @@ class QuizEngine:
             everyone_answered = all(p.answered_this_round for p in self.state.players.values())
 
         await self._broadcast_state()
-        if everyone_answered:
-            async with self._lock:
-                if self.state.phase == Phase.question:
-                    self._cancel_auto_reveal()
-                    self._reveal()
-            await self._broadcast_state()
 
-        return {"is_correct": is_correct, "points": points, "total_score": player.score}
+        result = {"is_correct": is_correct, "points": points, "total_score": player.score}
+        return result, everyone_answered
 
     def leaderboard(self) -> list[dict]:
         ranked = sorted(self.state.players.values(), key=lambda p: p.score, reverse=True)

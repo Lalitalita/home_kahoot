@@ -160,23 +160,33 @@ function RevealView({ state }) {
     <div className="flex-1 flex flex-col justify-center gap-6 max-w-4xl mx-auto w-full">
       <QuizProgress current={state.question_index + 1} total={state.total_questions} />
       <h2 className="font-display text-3xl font-bold text-center">{q.text}</h2>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {q.choices.map((choice, i) => {
           const count = counts[i] || 0;
           const pct = Math.round((count / total) * 100);
           const isCorrect = i === state.correct_index;
           return (
             <div key={i} className="flex items-center gap-3">
-              <span className={`${CHOICE_STYLES[i].bg} rounded-xl w-10 h-10 flex items-center justify-center text-xl shrink-0`}>
-                {CHOICE_STYLES[i].shape}
+              <span
+                className={`rounded-xl w-12 h-12 flex items-center justify-center text-2xl shrink-0 ${
+                  isCorrect ? "bg-green-500" : "bg-red-500"
+                }`}
+              >
+                {isCorrect ? "✓" : "✕"}
               </span>
-              <div className="flex-1 bg-ink-800 rounded-xl overflow-hidden relative h-10">
+              <div className="flex-1 bg-ink-800 rounded-xl overflow-hidden relative h-12 border border-ink-700">
                 <div
-                  className={`h-full ${isCorrect ? "bg-green-500" : "bg-ink-600"} transition-all duration-700`}
+                  className={`h-full transition-all duration-700 ${
+                    isCorrect ? "bg-green-500" : "bg-red-500/70"
+                  }`}
                   style={{ width: `${pct}%` }}
                 />
-                <span className="absolute inset-0 flex items-center px-3 text-sm font-medium">
-                  {choice} {isCorrect && "✓"} — {count}
+                <span className="absolute inset-0 flex items-center justify-between px-4 text-base font-semibold">
+                  <span className="flex items-center gap-2">
+                    <span className="text-lg">{CHOICE_STYLES[i].shape}</span>
+                    {choice}
+                  </span>
+                  <span className="font-mono text-lg">{pct}%</span>
                 </span>
               </div>
             </div>

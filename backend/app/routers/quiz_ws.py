@@ -88,11 +88,17 @@ async def ws_player(
             if data.get("type") == "answer":
                 choice_index = data.get("choice_index")
                 if isinstance(choice_index, int):
-                    result = await engine.submit_answer(pid, choice_index)
-                    if result is not None:
+                    outcome = await engine.submit_answer(pid, choice_index)
+                    if outcome is not None:
+                        result, everyone_answered = outcome
+                        # Send this player's own result before the reveal
+                        # broadcast that follows can reach them — same
+                        # connection, so delivery order is guaranteed.
                         await websocket.send_text(
                             json.dumps({"type": "answer_result", **result})
                         )
+                        if everyone_answered:
+                            await engine.reveal_now()
     except WebSocketDisconnect:
         pass
     finally:

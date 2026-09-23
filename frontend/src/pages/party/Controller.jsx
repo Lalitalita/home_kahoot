@@ -100,7 +100,9 @@ export default function Controller() {
           </div>
         ) : phase === "reveal" ? (
           <div className="space-y-3">
-            {lastResult ? (
+            {!hasAnswered ? (
+              <p className="text-ink-400">Temps écoulé, tu n'as pas répondu à temps.</p>
+            ) : lastResult ? (
               <>
                 <div className="text-5xl">{lastResult.is_correct ? "🎉" : "😬"}</div>
                 <p className="text-xl font-bold text-white">
@@ -111,7 +113,10 @@ export default function Controller() {
                 )}
               </>
             ) : (
-              <p className="text-ink-400">Temps écoulé, tu n'as pas répondu à temps.</p>
+              <>
+                <div className="text-4xl animate-pulse">⏳</div>
+                <p className="text-ink-400">Calcul du résultat...</p>
+              </>
             )}
           </div>
         ) : phase === "leaderboard" ? (
@@ -144,15 +149,7 @@ function FinalResult({ playerId, state }) {
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}
       </p>
       <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
-      {playerId && (
-        <a
-          href={`/api/players/${playerId}/recap.pdf`}
-          className="btn-primary inline-block"
-          download
-        >
-          Télécharger mon récap (PDF)
-        </a>
-      )}
+      <p className="text-ink-500 text-sm">Ton récap t'a été envoyé par email 📧</p>
     </div>
   );
 }

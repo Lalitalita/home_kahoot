@@ -1,11 +1,14 @@
 import io
+import os
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    Flowable,
     HRFlowable,
     Paragraph,
     SimpleDocTemplate,
@@ -16,234 +19,267 @@ from reportlab.platypus import (
 
 from app.schemas import GameSessionDetail, PlayerResult
 
-CYAN = colors.HexColor("#0fa3a3")
-CYAN_DARK = colors.HexColor("#127f7f")
-CYAN_TINT = colors.HexColor("#eafefe")
-MAGENTA = colors.HexColor("#7f18a0")
-MAGENTA_TINT = colors.HexColor("#fbeafe")
-INK = colors.HexColor("#181818")
-MUTED = colors.HexColor("#5c5c5c")
-BORDER = colors.HexColor("#e2e2e2")
-GREEN = colors.HexColor("#15803d")
-RED = colors.HexColor("#b91c1c")
-WHITE = colors.white
-GOLD = colors.HexColor("#c9a227")
-SILVER = colors.HexColor("#93a1ab")
-BRONZE = colors.HexColor("#a3672f")
+# ---------- Brand fonts (embedded, not the system Helvetica default) ----------
 
-PAGE_MARGINS = dict(topMargin=1.6 * cm, bottomMargin=1.8 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
+_FONT_DIR = os.path.join(os.path.dirname(__file__), "fonts")
+pdfmetrics.registerFont(TTFont("Baloo2-Bold", os.path.join(_FONT_DIR, "Baloo2-Bold.ttf")))
+pdfmetrics.registerFont(TTFont("Baloo2-ExtraBold", os.path.join(_FONT_DIR, "Baloo2-ExtraBold.ttf")))
+pdfmetrics.registerFont(TTFont("Inter-Regular", os.path.join(_FONT_DIR, "Inter-Regular.ttf")))
+pdfmetrics.registerFont(TTFont("Inter-Medium", os.path.join(_FONT_DIR, "Inter-Medium.ttf")))
+pdfmetrics.registerFont(TTFont("Inter-SemiBold", os.path.join(_FONT_DIR, "Inter-SemiBold.ttf")))
+pdfmetrics.registerFont(TTFont("Inter-Bold", os.path.join(_FONT_DIR, "Inter-Bold.ttf")))
+
+DISPLAY_FONT = "Baloo2-ExtraBold"
+DISPLAY_FONT_MEDIUM = "Baloo2-Bold"
+BODY_FONT = "Inter-Regular"
+BODY_FONT_MEDIUM = "Inter-Medium"
+BODY_FONT_SEMIBOLD = "Inter-SemiBold"
+BODY_FONT_BOLD = "Inter-Bold"
+
+CYAN = colors.HexColor("#0fa3a3")
+CYAN_DARK = colors.HexColor("#0d8a8a")
+CYAN_TINT = colors.HexColor("#eefdfd")
+MAGENTA = colors.HexColor("#7f18a0")
+MAGENTA_TINT = colors.HexColor("#faf0fd")
+INK = colors.HexColor("#1c1c1c")
+MUTED = colors.HexColor("#6b6b6b")
+BORDER = colors.HexColor("#e7e7ea")
+GREEN = colors.HexColor("#0f9d58")
+RED = colors.HexColor("#d93025")
+WHITE = colors.white
+GOLD = colors.HexColor("#d4af37")
+SILVER = colors.HexColor("#9aa5ac")
+BRONZE = colors.HexColor("#b0703a")
+PAGE_BG = colors.HexColor("#fbfaf8")
+
+PAGE_WIDTH = 17 * cm
+PAGE_MARGINS = dict(topMargin=1.4 * cm, bottomMargin=1.8 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
 
 _styles = getSampleStyleSheet()
-_banner_title_style = ParagraphStyle(
-    "BannerTitle", parent=_styles["Title"], textColor=WHITE, fontSize=22, alignment=TA_CENTER, spaceAfter=2
+_answer_style = ParagraphStyle(
+    "RecapAnswer", parent=_styles["Normal"], fontName=BODY_FONT, fontSize=10, textColor=INK, leading=13
 )
-_banner_subtitle_style = ParagraphStyle(
-    "BannerSubtitle", parent=_styles["Normal"], textColor=CYAN_TINT, fontSize=11, alignment=TA_CENTER
-)
-_score_number_style = ParagraphStyle(
-    "ScoreNumber", parent=_styles["Title"], textColor=WHITE, fontSize=26, alignment=TA_CENTER, spaceAfter=0
-)
-_score_label_style = ParagraphStyle(
-    "ScoreLabel", parent=_styles["Normal"], textColor=MAGENTA_TINT, fontSize=9, alignment=TA_CENTER
-)
-_question_style = ParagraphStyle(
-    "RecapQuestion", parent=_styles["Normal"], textColor=INK, fontSize=11, fontName="Helvetica-Bold"
-)
-_answer_style = ParagraphStyle("RecapAnswer", parent=_styles["Normal"], fontSize=10, textColor=INK)
 _section_style = ParagraphStyle(
-    "RecapSection", parent=_styles["Heading2"], textColor=MAGENTA, fontSize=14, spaceBefore=16, spaceAfter=4
+    "RecapSection",
+    parent=_styles["Normal"],
+    fontName=DISPLAY_FONT_MEDIUM,
+    textColor=MAGENTA,
+    fontSize=15,
+    spaceBefore=18,
+    spaceAfter=6,
 )
-_footer_style = ParagraphStyle("Footer", parent=_styles["Normal"], textColor=MUTED, fontSize=8, alignment=TA_CENTER)
-_podium_name_style = ParagraphStyle(
-    "PodiumName", parent=_styles["Normal"], textColor=WHITE, fontSize=12, fontName="Helvetica-Bold", alignment=TA_CENTER
-)
-_podium_score_style = ParagraphStyle(
-    "PodiumScore", parent=_styles["Normal"], textColor=WHITE, fontSize=10, alignment=TA_CENTER
-)
-_podium_empty_style = ParagraphStyle(
-    "PodiumEmpty", parent=_styles["Normal"], textColor=WHITE, fontSize=11, alignment=TA_CENTER
-)
-_podium_label_style = ParagraphStyle(
-    "PodiumLabel", parent=_styles["Normal"], textColor=MUTED, fontSize=9, alignment=TA_CENTER, spaceBefore=5
+_muted_style = ParagraphStyle(
+    "RecapMuted", parent=_styles["Normal"], fontName=BODY_FONT, fontSize=10, textColor=MUTED
 )
 
 
-def _title_banner(title: str, subtitle: str) -> Table:
-    """A full-width colored header band, cyan fading into a magenta edge —
-    reportlab has no real gradient fill for flowables, so two adjoining
-    solid-color cells stand in for one."""
-    cell = Table(
-        [[Paragraph(title, _banner_title_style)], [Paragraph(subtitle, _banner_subtitle_style)]],
-        colWidths=[17 * cm],
-    )
-    cell.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), CYAN_DARK),
-                ("TOPPADDING", (0, 0), (-1, 0), 14),
-                ("BOTTOMPADDING", (0, -1), (-1, -1), 14),
-                ("TOPPADDING", (0, 1), (-1, 1), 2),
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-            ]
+# ---------- Custom flowables: hand-drawn so corners are actually round ----------
+
+
+class HeaderBanner(Flowable):
+    """The colored title band at the top of every recap — a true
+    rounded-corner rectangle (reportlab tables can't do that), with a
+    thin magenta accent along the bottom edge."""
+
+    def __init__(self, title: str, subtitle: str, width: float = PAGE_WIDTH, height: float = 3.1 * cm):
+        super().__init__()
+        self.title = title
+        self.subtitle = subtitle
+        self.width = width
+        self.height = height
+
+    def wrap(self, availWidth, availHeight):
+        return (self.width, self.height)
+
+    def draw(self):
+        c = self.canv
+        c.saveState()
+        c.setFillColor(CYAN_DARK)
+        c.roundRect(0, 0, self.width, self.height, 14, fill=1, stroke=0)
+        c.setFillColor(MAGENTA)
+        c.roundRect(0, 0, self.width, 0.16 * cm, 0, fill=1, stroke=0)
+
+        c.setFillColor(WHITE)
+        c.setFont(DISPLAY_FONT, 23)
+        c.drawCentredString(self.width / 2, self.height - 1.35 * cm, self.title)
+        c.setFillColor(CYAN_TINT)
+        c.setFont(BODY_FONT_MEDIUM, 11)
+        c.drawCentredString(self.width / 2, self.height - 2.05 * cm, self.subtitle)
+        c.restoreState()
+
+
+class ScoreBadges(Flowable):
+    """Two rounded pill badges side by side: total score, and the
+    correct-answer tally. Drawn on the canvas so the corners are actually
+    round, not approximated with table cells."""
+
+    def __init__(self, score: int, correct_count: int, total: int, width: float = PAGE_WIDTH, height: float = 3.0 * cm):
+        super().__init__()
+        self.score = score
+        self.correct_count = correct_count
+        self.total = total
+        self.width = width
+        self.height = height
+
+    def wrap(self, availWidth, availHeight):
+        return (self.width, self.height)
+
+    def draw(self):
+        c = self.canv
+        gap = 0.5 * cm
+        badge_w = (self.width - gap) / 2
+
+        def badge(x: float, bg, big_text: str, small_text: str):
+            c.saveState()
+            c.setFillColor(bg)
+            c.roundRect(x, 0, badge_w, self.height, 16, fill=1, stroke=0)
+            c.setFillColor(WHITE)
+            c.setFont(DISPLAY_FONT, 30)
+            c.drawCentredString(x + badge_w / 2, self.height / 2 - 4, big_text)
+            c.setFont(BODY_FONT_SEMIBOLD, 9)
+            c.drawCentredString(x + badge_w / 2, self.height / 2 - 24, small_text)
+            c.restoreState()
+
+        badge(0, MAGENTA, str(self.score), "POINTS")
+        badge(
+            badge_w + gap,
+            CYAN_DARK,
+            f"{self.correct_count}/{self.total}" if self.total else "—",
+            "BONNES RÉPONSES",
         )
-    )
-    accent = Table([[""]], colWidths=[17 * cm], rowHeights=[4])
-    accent.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), MAGENTA)]))
-    wrapper = Table([[cell], [accent]], colWidths=[17 * cm])
-    wrapper.setStyle(
-        TableStyle(
-            [
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                ("TOPPADDING", (0, 0), (-1, -1), 0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ]
-        )
-    )
-    return wrapper
 
 
-def _score_badge(score: int, correct_count: int, total: int) -> Table:
-    def _cell(number: str, label: str, bg) -> Table:
-        t = Table([[Paragraph(number, _score_number_style)], [Paragraph(label, _score_label_style)]])
-        t.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), bg),
-                    ("TOPPADDING", (0, 0), (-1, 0), 10),
-                    ("BOTTOMPADDING", (0, 1), (-1, 1), 10),
-                    ("TOPPADDING", (0, 1), (-1, 1), 0),
-                ]
-            )
-        )
-        return t
+class Podium(Flowable):
+    """The gold/silver/bronze podium — rounded-top bars whose height
+    signals rank, drawn directly so the tops are genuinely rounded."""
 
-    row = [
-        _cell(str(score), "POINTS", MAGENTA),
-        _cell(f"{correct_count}/{total}" if total else "—", "BONNES RÉPONSES", CYAN_DARK),
-    ]
-    wrapper = Table([row], colWidths=[8.4 * cm, 8.4 * cm], spaceBefore=10, spaceAfter=14)
-    wrapper.setStyle(
-        TableStyle(
-            [
-                ("LEFTPADDING", (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-                ("TOPPADDING", (0, 0), (-1, -1), 0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ]
-        )
-    )
-    return wrapper
+    def __init__(self, entries: list[tuple], width: float = PAGE_WIDTH, height: float = 5.3 * cm):
+        # entries: list of (name_or_None, score, label, color, bar_height)
+        super().__init__()
+        self.entries = entries
+        self.width = width
+        self.height = height
+
+    def wrap(self, availWidth, availHeight):
+        return (self.width, self.height)
+
+    def draw(self):
+        c = self.canv
+        n = len(self.entries)
+        gap = 0.5 * cm
+        label_h = 0.55 * cm
+        col_w = (self.width - gap * (n - 1)) / n
+
+        for i, (name, score, label, color, bar_h) in enumerate(self.entries):
+            x = i * (col_w + gap)
+            y = label_h
+            c.saveState()
+            c.setFillColor(color)
+            c.roundRect(x, y, col_w, bar_h, 12, fill=1, stroke=0)
+            if name is not None:
+                c.setFillColor(WHITE)
+                c.setFont(DISPLAY_FONT_MEDIUM, 13)
+                c.drawCentredString(x + col_w / 2, y + bar_h - 24, name[:16])
+                c.setFont(BODY_FONT_MEDIUM, 10)
+                c.drawCentredString(x + col_w / 2, y + bar_h - 40, f"{score} pts")
+            else:
+                c.setFillColor(colors.Color(1, 1, 1, alpha=0.85))
+                c.setFont(BODY_FONT_MEDIUM, 12)
+                c.drawCentredString(x + col_w / 2, y + bar_h / 2 - 4, "—")
+            c.setFillColor(MUTED)
+            c.setFont(BODY_FONT_SEMIBOLD, 9)
+            c.drawCentredString(x + col_w / 2, 0, label)
+            c.restoreState()
 
 
-def _footer(canvas, doc) -> None:
+def _page_background(canvas, doc) -> None:
     canvas.saveState()
+    canvas.setFillColor(PAGE_BG)
+    canvas.rect(0, 0, A4[0], A4[1], fill=1, stroke=0)
     canvas.setStrokeColor(BORDER)
+    canvas.setLineWidth(0.6)
     canvas.line(1.5 * cm, 1.3 * cm, A4[0] - 1.5 * cm, 1.3 * cm)
-    canvas.setFont("Helvetica", 8)
+    canvas.setFont(BODY_FONT, 8)
     canvas.setFillColor(MUTED)
-    canvas.drawCentredString(A4[0] / 2, 0.9 * cm, f"C'est la fête — page {doc.page}")
+    canvas.drawCentredString(A4[0] / 2, 0.9 * cm, f"C'est la fête · page {doc.page}")
     canvas.restoreState()
 
 
 def _player_answers_table(player: PlayerResult) -> Table:
-    header = ["#", "Question", "Réponse donnée", "Bonne réponse", "Points"]
+    header_style = ParagraphStyle(
+        "tableHeader", parent=_styles["Normal"], fontName=BODY_FONT_BOLD, fontSize=9.5, textColor=WHITE
+    )
+    header = [Paragraph(h, header_style) for h in ["#", "Question", "Réponse donnée", "Bonne réponse", "Pts"]]
     rows = [header]
     for i, a in enumerate(player.answers, start=1):
         correct = a.choices[a.correct_index]
         if not a.answered:
             given = "Pas de réponse"
             given_color = MUTED
+            given_font = BODY_FONT_MEDIUM
         elif a.choice_index is not None and 0 <= a.choice_index < len(a.choices):
             given = a.choices[a.choice_index]
             given_color = GREEN if a.is_correct else RED
+            given_font = BODY_FONT_BOLD
         else:
             given = "—"
             given_color = MUTED
+            given_font = BODY_FONT_MEDIUM
         rows.append(
             [
-                str(i),
+                Paragraph(str(i), ParagraphStyle("idx", parent=_answer_style, textColor=MUTED)),
                 Paragraph(a.question_text, _answer_style),
-                Paragraph(given, ParagraphStyle("given", parent=_answer_style, textColor=given_color, fontName="Helvetica-Bold")),
-                Paragraph(correct, _answer_style),
-                str(a.points),
+                Paragraph(
+                    given, ParagraphStyle("given", parent=_answer_style, textColor=given_color, fontName=given_font)
+                ),
+                Paragraph(correct, ParagraphStyle("correct", parent=_answer_style, textColor=MUTED)),
+                Paragraph(str(a.points), ParagraphStyle("pts", parent=_answer_style, fontName=BODY_FONT_SEMIBOLD)),
             ]
         )
 
-    table = Table(rows, colWidths=[1 * cm, 6.5 * cm, 3.3 * cm, 3.3 * cm, 1.6 * cm], repeatRows=1)
+    table = Table(rows, colWidths=[0.8 * cm, 6.6 * cm, 3.3 * cm, 3.3 * cm, 1.5 * cm], repeatRows=1)
     table.setStyle(
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, 0), CYAN_DARK),
-                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, CYAN_TINT]),
-                ("LINEBELOW", (0, 0), (-1, -1), 0.5, BORDER),
+                ("LINEBELOW", (0, 0), (-1, -2), 0.5, BORDER),
                 ("BOX", (0, 0), (-1, -1), 0.75, CYAN_DARK),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, 0), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 9),
             ]
         )
     )
     return table
 
 
-def _podium_section(players: list[PlayerResult]) -> list:
+def _podium_flowables(players: list[PlayerResult]) -> list:
     ranked = sorted(players, key=lambda p: p.score, reverse=True)
     top3 = ranked[:3]
     if not top3:
         return []
 
-    # Left to right on a real podium: 2nd, 1st, 3rd. Bar height + color
-    # signal rank; VALIGN=BOTTOM keeps them anchored to a shared "ground".
-    slots = [
-        (top3[1] if len(top3) > 1 else None, "2E PLACE", SILVER, 3.0 * cm),
-        (top3[0], "1ERE PLACE", GOLD, 4.2 * cm),
-        (top3[2] if len(top3) > 2 else None, "3E PLACE", BRONZE, 2.1 * cm),
+    def entry(idx: int, label: str, color, bar_h: float) -> tuple:
+        if idx < len(top3):
+            p = top3[idx]
+            return (p.nickname, p.score, label, color, bar_h)
+        return (None, 0, label, color, bar_h)
+
+    # Left to right: 2nd, 1st, 3rd — the classic podium arrangement.
+    entries = [
+        entry(1, "2E PLACE", SILVER, 3.1 * cm),
+        entry(0, "1ERE PLACE", GOLD, 4.3 * cm),
+        entry(2, "3E PLACE", BRONZE, 2.2 * cm),
     ]
 
-    bars = []
-    labels = []
-    for player, label, color, height in slots:
-        if player is not None:
-            content = Table(
-                [[Paragraph(player.nickname, _podium_name_style)], [Paragraph(f"{player.score} pts", _podium_score_style)]],
-                colWidths=[5.2 * cm],
-                rowHeights=[height - 1.1 * cm, 1.1 * cm],
-            )
-        else:
-            content = Table([[Paragraph("—", _podium_empty_style)]], colWidths=[5.2 * cm], rowHeights=[height])
-        content.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), color),
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ]
-            )
-        )
-        bars.append(content)
-        labels.append(Paragraph(label, _podium_label_style))
-
-    podium = Table([bars, labels], colWidths=[5.4 * cm] * 3)
-    podium.setStyle(
-        TableStyle(
-            [
-                ("VALIGN", (0, 0), (-1, 0), "BOTTOM"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 3),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 3),
-                ("TOPPADDING", (0, 0), (-1, -1), 0),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
-            ]
-        )
-    )
-
     return [
-        HRFlowable(width="100%", thickness=0.75, color=BORDER, spaceBefore=22, spaceAfter=6),
+        HRFlowable(width="100%", thickness=0.75, color=BORDER, spaceBefore=22, spaceAfter=10),
         Paragraph("Podium", _section_style),
-        podium,
+        Podium(entries),
     ]
 
 
@@ -254,15 +290,17 @@ def build_player_recap_pdf(player: PlayerResult, party_title: str = "C'est la f�
     total = len(player.answers)
 
     story = [
-        _title_banner(party_title, f"Récap du quiz de {player.nickname}"),
-        _score_badge(player.score, correct_count, total),
+        HeaderBanner(party_title, f"Récap du quiz de {player.nickname}"),
+        Spacer(1, 16),
+        ScoreBadges(player.score, correct_count, total),
+        Spacer(1, 16),
     ]
     if player.answers:
         story.append(_player_answers_table(player))
     else:
-        story.append(Paragraph("Aucune réponse enregistrée pour cette session.", _answer_style))
+        story.append(Paragraph("Aucune réponse enregistrée pour cette session.", _muted_style))
 
-    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
+    doc.build(story, onFirstPage=_page_background, onLaterPages=_page_background)
     return buffer.getvalue()
 
 
@@ -271,26 +309,34 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
     doc = SimpleDocTemplate(buffer, pagesize=A4, **PAGE_MARGINS)
 
     story = [
-        _title_banner(party_title, f"{session.label} · {session.started_at.strftime('%d/%m/%Y %H:%M')}"),
-        Spacer(1, 12),
+        HeaderBanner(party_title, f"{session.label} · {session.started_at.strftime('%d/%m/%Y %H:%M')}"),
+        Spacer(1, 16),
     ]
 
-    ranking_rows = [["#", "Pseudo", "Score"]]
+    header_style = ParagraphStyle(
+        "rankHeader", parent=_styles["Normal"], fontName=BODY_FONT_BOLD, fontSize=9.5, textColor=WHITE
+    )
+    ranking_rows = [[Paragraph(h, header_style) for h in ["#", "Pseudo", "Score"]]]
     for i, p in enumerate(sorted(session.players, key=lambda p: p.score, reverse=True), start=1):
-        ranking_rows.append([str(i), p.nickname, str(p.score)])
-    ranking_table = Table(ranking_rows, colWidths=[1.2 * cm, 8 * cm, 3 * cm])
+        ranking_rows.append(
+            [
+                Paragraph(str(i), ParagraphStyle("rankIdx", parent=_answer_style, textColor=MUTED)),
+                Paragraph(p.nickname, ParagraphStyle("rankName", parent=_answer_style, fontName=BODY_FONT_SEMIBOLD)),
+                Paragraph(str(p.score), ParagraphStyle("rankScore", parent=_answer_style, fontName=BODY_FONT_BOLD)),
+            ]
+        )
+    ranking_table = Table(ranking_rows, colWidths=[1.2 * cm, 12.3 * cm, 3.5 * cm])
     ranking_table.setStyle(
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, 0), MAGENTA),
-                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTSIZE", (0, 0), (-1, -1), 10),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [WHITE, MAGENTA_TINT]),
                 ("BOX", (0, 0), (-1, -1), 0.75, MAGENTA),
-                ("LINEBELOW", (0, 0), (-1, -1), 0.5, BORDER),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LINEBELOW", (0, 0), (-1, -2), 0.5, BORDER),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
             ]
         )
     )
@@ -308,10 +354,10 @@ def build_session_recap_pdf(session: GameSessionDetail, party_title: str = "C'es
         if player.answers:
             story.append(_player_answers_table(player))
         else:
-            story.append(Paragraph("Aucune réponse enregistrée.", _answer_style))
+            story.append(Paragraph("Aucune réponse enregistrée.", _muted_style))
         story.append(Spacer(1, 4))
 
-    story.extend(_podium_section(session.players))
+    story.extend(_podium_flowables(session.players))
 
-    doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
+    doc.build(story, onFirstPage=_page_background, onLaterPages=_page_background)
     return buffer.getvalue()
