@@ -69,8 +69,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="card w-full max-w-sm space-y-5">
         <div className="text-center space-y-1">
-          <div className="text-3xl">🔐</div>
-          <h1 className="text-xl font-bold text-white">Administration</h1>
+          <h1 className="text-xl font-semibold text-stone-900">Administration</h1>
         </div>
 
         {step === "credentials" && (
@@ -93,7 +92,7 @@ export default function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-rose-600 text-sm">{error}</p>}
             <button className="btn-primary w-full" disabled={busy} type="submit">
               {busy ? "..." : "Continuer"}
             </button>
@@ -102,7 +101,7 @@ export default function AdminLogin() {
 
         {step === "setup2fa" && (
           <form onSubmit={handleConfirmSetup} className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-stone-500">
               Première connexion : scanne ce QR code avec Google Authenticator, Authy ou une app
               équivalente pour activer la double authentification.
             </p>
@@ -121,7 +120,7 @@ export default function AdminLogin() {
                 autoFocus
               />
             </div>
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-rose-600 text-sm">{error}</p>}
             <button className="btn-primary w-full" disabled={busy} type="submit">
               {busy ? "..." : "Activer la 2FA et se connecter"}
             </button>
@@ -130,7 +129,7 @@ export default function AdminLogin() {
 
         {step === "verify2fa" && (
           <form onSubmit={handleVerify} className="space-y-4">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-stone-500">
               Entre le code généré par ton application d'authentification.
             </p>
             <input
@@ -140,7 +139,7 @@ export default function AdminLogin() {
               maxLength={6}
               autoFocus
             />
-            {error && <p className="text-red-400 text-sm">{error}</p>}
+            {error && <p className="text-rose-600 text-sm">{error}</p>}
             <button className="btn-primary w-full" disabled={busy} type="submit">
               {busy ? "..." : "Se connecter"}
             </button>

@@ -35,13 +35,13 @@ export default function AdminDashboard() {
     <AdminLayout title="Tableau de bord">
       <div
         className={`card mb-6 flex items-center justify-between ${
-          partyMode ? "border-party-500" : ""
+          partyMode ? "border-party-400" : ""
         }`}
       >
         <div>
-          <h2 className="font-semibold text-white">Mode soirée</h2>
-          <p className="text-sm text-slate-400">
-            {partyMode === null ? "..." : partyMode ? "Activé 🎉" : "Désactivé"}
+          <h2 className="font-semibold text-stone-900">Mode soirée</h2>
+          <p className="text-sm text-stone-500">
+            {partyMode === null ? "..." : partyMode ? "Activé" : "Désactivé"}
           </p>
         </div>
         <Link to="/admin/soiree" className="btn-primary">
@@ -74,9 +74,9 @@ export default function AdminDashboard() {
 
 function StatCard({ label, value, to, highlight }) {
   return (
-    <Link to={to} className={`card hover:border-party-600 transition ${highlight ? "border-amber-500" : ""}`}>
-      <div className="text-3xl font-bold text-white">{value}</div>
-      <div className="text-sm text-slate-400 mt-1">{label}</div>
+    <Link to={to} className={`card hover:border-party-300 transition ${highlight ? "border-amber-400" : ""}`}>
+      <div className="text-2xl font-semibold text-stone-900">{value}</div>
+      <div className="text-sm text-stone-500 mt-1">{label}</div>
     </Link>
   );
 }

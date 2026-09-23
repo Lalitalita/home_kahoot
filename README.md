@@ -86,8 +86,14 @@ home_kahoot/
    Ouvrez `.env` et modifiez au minimum :
    - `SECRET_KEY` : une valeur aléatoire longue (ex : `openssl rand -hex 32`)
    - `ADMIN_USERNAME` / `ADMIN_BOOTSTRAP_PASSWORD` : identifiants du premier
-     compte admin (à changer, le mot de passe par défaut n'est utilisé
-     qu'au tout premier démarrage)
+     compte admin. **Important** : ce mot de passe n'est utilisé que pour
+     créer le compte au tout premier démarrage — si vous le changez plus
+     tard, un compte admin qui existe déjà ne sera pas mis à jour (voir
+     [Mot de passe admin oublié](#mot-de-passe-admin-oublié--connexion-impossible)
+     ci-dessous). Si votre mot de passe contient des caractères spéciaux
+     (`$`, `#`, espaces...), entourez-le de guillemets dans `.env` (ex :
+     `ADMIN_BOOTSTRAP_PASSWORD="Mon Mot de Passe #1"`) et doublez tout `$`
+     en `$$`, sinon Docker Compose risque de le tronquer ou de le modifier.
 
 3. **Démarrer l'application**
 
@@ -107,6 +113,26 @@ home_kahoot/
    vous présente un **QR code** à scanner avec une application
    d'authentification (Google Authenticator, Authy, Aegis...) pour
    activer la 2FA — obligatoire avant d'accéder au tableau de bord.
+
+### Mot de passe admin oublié / connexion impossible
+
+Le mot de passe défini par `ADMIN_BOOTSTRAP_PASSWORD` ne sert **qu'à la
+toute première création du compte**. Si vous avez déjà démarré
+l'application une première fois (même brièvement, même avec le mot de
+passe par défaut), le compte existe déjà en base : modifier `.env`
+ensuite et relancer `docker compose up` n'a plus aucun effet, d'où
+l'impression que "le bon mot de passe ne marche pas".
+
+Pour réinitialiser le mot de passe admin (et la 2FA) sans perdre vos
+invités, questions, messages ou budget, exécutez, conteneurs démarrés :
+
+```bash
+docker compose exec backend python -m app.manage reset-admin --password "NouveauMotDePasseSolide"
+```
+
+Reconnectez-vous ensuite sur `/admin/connexion` avec ce nouveau mot de
+passe : comme la 2FA a été réinitialisée, l'application vous présentera
+à nouveau un QR code à scanner.
 
 ### Arrêter / mettre à jour
 

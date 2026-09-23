@@ -7,7 +7,7 @@ export default function RequireAdmin({ children }) {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400">
+      <div className="min-h-screen flex items-center justify-center text-stone-400">
         Vérification...
       </div>
     );

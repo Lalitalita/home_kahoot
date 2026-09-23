@@ -64,8 +64,8 @@ export default function MessageWall() {
     <div>
       <NavBar />
       <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-2xl font-bold text-white">Mur de messages 💬</h1>
-        <p className="text-slate-400 text-sm">
+        <h1 className="text-2xl font-semibold text-stone-900">Mur de messages</h1>
+        <p className="text-stone-500 text-sm">
           Un petit mot, une blague, une photo souvenir... tout est bienvenu !
         </p>
 
@@ -87,9 +87,9 @@ export default function MessageWall() {
             type="file"
             accept="image/*"
             onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="text-sm text-slate-400"
+            className="text-sm text-stone-500"
           />
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-rose-600 text-sm">{error}</p>}
           <button className="btn-primary w-full" disabled={sending} type="submit">
             {sending ? "Envoi..." : "Publier"}
           </button>
@@ -99,19 +99,19 @@ export default function MessageWall() {
           {messages.map((m) => (
             <div key={m.id} className="card">
               <div className="flex justify-between items-baseline">
-                <span className="font-semibold text-white">{m.author_name}</span>
-                <span className="text-xs text-slate-500">
+                <span className="font-semibold text-stone-900">{m.author_name}</span>
+                <span className="text-xs text-stone-400">
                   {new Date(m.created_at).toLocaleString("fr-FR")}
                 </span>
               </div>
-              {m.content && <p className="text-slate-300 mt-1 whitespace-pre-wrap">{m.content}</p>}
+              {m.content && <p className="text-stone-600 mt-1 whitespace-pre-wrap">{m.content}</p>}
               {m.photo_url && (
                 <img src={m.photo_url} alt="" className="mt-3 rounded-xl max-h-80 w-full object-cover" />
               )}
             </div>
           ))}
           {messages.length === 0 && (
-            <p className="text-slate-500 text-center py-6">Aucun message pour l'instant.</p>
+            <p className="text-stone-400 text-center py-6">Aucun message pour l'instant.</p>
           )}
         </div>
       </div>

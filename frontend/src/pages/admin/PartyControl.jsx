@@ -57,14 +57,14 @@ export default function AdminPartyControl() {
     <AdminLayout title="Mode soirée">
       <div className="card mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="font-semibold text-white">Basculer l'application en mode soirée</h2>
-          <p className="text-sm text-slate-400">
+          <h2 className="font-semibold text-stone-900">Basculer l'application en mode soirée</h2>
+          <p className="text-sm text-stone-500">
             Ferme les pages de préparation et réinitialise le quiz avec les questions acceptées.
           </p>
         </div>
         {partyMode === false && (
           <button className="btn-primary" disabled={busy} onClick={() => togglePartyMode(true)}>
-            Activer le mode soirée 🎉
+            Activer le mode soirée
           </button>
         )}
         {partyMode === true && (
@@ -78,18 +78,18 @@ export default function AdminPartyControl() {
         <>
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="card">
-              <h3 className="font-semibold text-white mb-2">Écran TV</h3>
-              <p className="text-sm text-slate-400 mb-2">
+              <h3 className="font-semibold text-stone-900 mb-2">Écran TV</h3>
+              <p className="text-sm text-stone-500 mb-2">
                 À afficher sur la télé/le vidéoprojecteur.
               </p>
-              <code className="text-xs bg-slate-800 rounded px-2 py-1 block break-all">
+              <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1 block break-all">
                 {origin}/soiree/ecran
               </code>
             </div>
             <div className="card">
-              <h3 className="font-semibold text-white mb-2">Rejoindre (invités)</h3>
-              <p className="text-sm text-slate-400 mb-2">À partager avec tout le monde.</p>
-              <code className="text-xs bg-slate-800 rounded px-2 py-1 block break-all">
+              <h3 className="font-semibold text-stone-900 mb-2">Rejoindre (invités)</h3>
+              <p className="text-sm text-stone-500 mb-2">À partager avec tout le monde.</p>
+              <code className="text-xs bg-stone-100 text-stone-600 rounded px-2 py-1 block break-all">
                 {origin}/soiree
               </code>
             </div>
@@ -98,11 +98,11 @@ export default function AdminPartyControl() {
           <div className="card space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <h3 className="font-semibold text-white">
+                <h3 className="font-semibold text-stone-900">
                   {state ? PHASE_LABEL[state.phase] : "Connexion..."}
                 </h3>
                 {state && (
-                  <p className="text-sm text-slate-400">
+                  <p className="text-sm text-stone-500">
                     {state.players_count} joueur(s) connecté(s) · Question{" "}
                     {Math.min(state.question_index + 1, state.total_questions)}/{state.total_questions}
                   </p>
@@ -126,17 +126,17 @@ export default function AdminPartyControl() {
             </div>
 
             {state?.question && (
-              <div className="bg-slate-800/60 rounded-xl p-4">
-                <p className="text-white font-medium">{state.question.text}</p>
+              <div className="bg-stone-50 border border-stone-200 rounded-xl p-4">
+                <p className="text-stone-900 font-medium">{state.question.text}</p>
               </div>
             )}
 
             {state?.leaderboard?.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-slate-400 mb-2">Classement</h4>
+                <h4 className="text-sm font-semibold text-stone-500 mb-2">Classement</h4>
                 <ol className="space-y-1">
                   {state.leaderboard.map((p, i) => (
-                    <li key={p.player_id} className="flex justify-between text-sm text-slate-300">
+                    <li key={p.player_id} className="flex justify-between text-sm text-stone-600">
                       <span>
                         {i + 1}. {p.nickname}
                       </span>
