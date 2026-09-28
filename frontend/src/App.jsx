@@ -13,6 +13,7 @@ import AdminPartyControl from "./pages/admin/PartyControl.jsx";
 import AdminPlanning from "./pages/admin/Planning.jsx";
 import AdminQuestions from "./pages/admin/QuestionsAdmin.jsx";
 import AdminResults from "./pages/admin/Results.jsx";
+import Gallery from "./pages/Gallery.jsx";
 import GuestList from "./pages/GuestList.jsx";
 import GuestProfile from "./pages/GuestProfile.jsx";
 import Home from "./pages/Home.jsx";
@@ -21,6 +22,7 @@ import Controller from "./pages/party/Controller.jsx";
 import Join from "./pages/party/Join.jsx";
 import Screen from "./pages/party/Screen.jsx";
 import QuestionSubmit from "./pages/QuestionSubmit.jsx";
+import Social from "./pages/Social.jsx";
 
 export default function App() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
       <Route path="/invites/:accessCode" element={<PrepGate><GuestProfile /></PrepGate>} />
       <Route path="/quiz/proposer" element={<PrepGate><QuestionSubmit /></PrepGate>} />
       <Route path="/mur" element={<MessageWall />} />
+      <Route path="/qui-est-qui" element={<PrepGate><Social /></PrepGate>} />
+      <Route path="/galerie" element={<PrepGate><Gallery /></PrepGate>} />
 
       <Route path="/soiree" element={<Join />} />
       <Route path="/soiree/manette" element={<Controller />} />

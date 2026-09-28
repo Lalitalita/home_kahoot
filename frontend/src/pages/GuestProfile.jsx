@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { api } from "../api.js";
 import EventInfoCard from "../components/EventInfoCard.jsx";
+import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 import { setStoredGuestCode } from "../guestCode.js";
 
@@ -78,8 +79,8 @@ export default function GuestProfile() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {loading && <p className="text-ink-500">Chargement...</p>}
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+        {loading && <Loading />}
         {error && !guest && <p className="text-rose-600">{error}</p>}
 
         {guest && (

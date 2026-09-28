@@ -70,10 +70,15 @@ export default {
           "0%": { transform: "translateY(-10vh) rotate(0deg)", opacity: 1 },
           "100%": { transform: "translateY(110vh) rotate(360deg)", opacity: 0.8 },
         },
+        "fade-in": {
+          "0%": { opacity: 0, transform: "translateY(6px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
       },
       animation: {
         "pop-in": "pop-in 0.3s ease-out",
         confetti: "confetti linear forwards",
+        "fade-in": "fade-in 0.35s ease-out",
       },
     },
   },

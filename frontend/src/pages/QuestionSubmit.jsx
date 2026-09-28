@@ -66,7 +66,7 @@ export default function QuestionSubmit() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
         <h1 className="text-2xl font-semibold text-ink-50">Proposer une question</h1>
         <p className="text-ink-400 text-sm">
           Propose une question à choix multiple (4 réponses). L'organisateur validera ta question
@@ -96,7 +96,11 @@ export default function QuestionSubmit() {
           </div>
 
           {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="flex items-center gap-3">
+            <label
+              key={n}
+              className="flex items-center gap-3 py-1 -my-1 cursor-pointer"
+              onClick={() => setCorrectIndex(n - 1)}
+            >
               <input
                 type="radio"
                 name="correct"
@@ -109,8 +113,9 @@ export default function QuestionSubmit() {
                 placeholder={`Réponse ${n}`}
                 value={form[`choice_${n}`]}
                 onChange={(e) => setForm({ ...form, [`choice_${n}`]: e.target.value })}
+                onClick={(e) => e.stopPropagation()}
               />
-            </div>
+            </label>
           ))}
           <p className="text-xs text-ink-500">
             Sélectionne le rond à côté de la bonne réponse.

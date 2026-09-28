@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import NavBar from "../components/NavBar.jsx";
 import EventInfoCard from "../components/EventInfoCard.jsx";
+import { LogoMark } from "../components/Logo.jsx";
 import { getStoredGuestCode, setStoredGuestCode } from "../guestCode.js";
 
 export default function Home() {
@@ -29,9 +30,9 @@ export default function Home() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
+      <div className="max-w-3xl mx-auto px-4 py-10 space-y-8 animate-fade-in">
         <div className="text-center space-y-3">
-          <div className="text-3xl">🎉</div>
+          <LogoMark size={56} className="mx-auto" />
           <h1 className="text-3xl font-semibold text-ink-50">Bienvenue à la fête</h1>
           <p className="text-ink-400 max-w-lg mx-auto">
             Découvre qui sera là, renseigne tes préférences alimentaires, propose une question

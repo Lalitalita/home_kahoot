@@ -2,6 +2,24 @@ import { useEffect, useState } from "react";
 
 import { api } from "../api.js";
 
+function useCountdown(partyDate, partyTime) {
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!partyDate) return;
+    const id = setInterval(() => setNow(Date.now()), 1000 * 30);
+    return () => clearInterval(id);
+  }, [partyDate]);
+
+  if (!partyDate) return null;
+  const target = new Date(`${partyDate}T${partyTime || "00:00"}:00`).getTime();
+  const diffMs = target - now;
+  if (diffMs <= 0) return { days: 0, hours: 0, past: true };
+  const days = Math.floor(diffMs / 86400000);
+  const hours = Math.floor((diffMs % 86400000) / 3600000);
+  return { days, hours, past: false };
+}
+
 function formatDate(isoDate) {
   try {
     return new Date(`${isoDate}T00:00:00`).toLocaleDateString("fr-FR", {
@@ -37,13 +55,28 @@ export default function EventInfoCard() {
     api.get("/api/settings").then(setInfo).catch(() => {});
   }, []);
 
+  const countdown = useCountdown(info?.party_date, info?.party_time);
+
   if (!info) return null;
   const { party_location_name, party_address, party_date, party_time } = info;
   if (!party_location_name && !party_address && !party_date && !party_time) return null;
 
   return (
     <div className="card space-y-3">
-      <h2 className="text-lg font-semibold text-ink-50">📍 Infos pratiques</h2>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-lg font-semibold text-ink-50">📍 Infos pratiques</h2>
+        {countdown && !countdown.past && (
+          <span className="text-xs font-mono bg-party-950/50 border border-party-800/60 text-party-300 rounded-full px-3 py-1">
+            🎈 J-{countdown.days}
+            {countdown.days === 0 ? `, ${countdown.hours}h` : ""}
+          </span>
+        )}
+        {countdown?.past && (
+          <span className="text-xs font-mono bg-magenta-950/50 border border-magenta-800/60 text-magenta-300 rounded-full px-3 py-1">
+            🎉 C'est le jour J !
+          </span>
+        )}
+      </div>
       <div className="grid sm:grid-cols-3 gap-3 text-sm">
         {party_date && (
           <div>

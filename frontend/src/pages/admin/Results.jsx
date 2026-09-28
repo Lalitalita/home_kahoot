@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api, downloadFile } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import Loading from "../../components/Loading.jsx";
 
 function formatDate(iso) {
   return new Date(iso).toLocaleString("fr-FR", {
@@ -16,6 +17,7 @@ export default function AdminResults() {
   const [sessions, setSessions] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [awards, setAwards] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   function load() {
@@ -28,13 +30,18 @@ export default function AdminResults() {
     if (expandedId === session.id) {
       setExpandedId(null);
       setDetail(null);
+      setAwards(null);
       return;
     }
     setExpandedId(session.id);
     setLoadingDetail(true);
     try {
-      const d = await api.get(`/api/admin/sessions/${session.id}`, { auth: true });
+      const [d, a] = await Promise.all([
+        api.get(`/api/admin/sessions/${session.id}`, { auth: true }),
+        api.get(`/api/admin/sessions/${session.id}/awards`, { auth: true }).catch(() => null),
+      ]);
       setDetail(d);
+      setAwards(a);
     } finally {
       setLoadingDetail(false);
     }
@@ -119,13 +126,16 @@ export default function AdminResults() {
 
             {expandedId === s.id && (
               <div className="mt-4 pt-4 border-t border-ink-700">
-                {loadingDetail && <p className="text-ink-500 text-sm">Chargement...</p>}
+                {loadingDetail && <Loading />}
                 {!loadingDetail && detail && (
-                  <SessionDetail
-                    detail={detail}
-                    onEmailChange={updatePlayerEmail}
-                    onResend={resendPlayerEmail}
-                  />
+                  <>
+                    <AwardsPanel awards={awards} />
+                    <SessionDetail
+                      detail={detail}
+                      onEmailChange={updatePlayerEmail}
+                      onResend={resendPlayerEmail}
+                    />
+                  </>
                 )}
               </div>
             )}
@@ -138,6 +148,55 @@ export default function AdminResults() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+function AwardsPanel({ awards }) {
+  if (!awards) return null;
+  const items = [
+    awards.fastest_answer && {
+      icon: "⚡",
+      label: "Réponse la plus rapide",
+      detail: `${awards.fastest_answer.nickname} en ${(awards.fastest_answer.response_time_ms / 1000).toFixed(1)}s`,
+    },
+    awards.slowest_answer && {
+      icon: "🐢",
+      label: "Réponse la plus lente",
+      detail: `${awards.slowest_answer.nickname} en ${(awards.slowest_answer.response_time_ms / 1000).toFixed(1)}s`,
+    },
+    awards.best_streak && {
+      icon: "🔥",
+      label: "Série de bonnes réponses",
+      detail: `${awards.best_streak.nickname} — ${awards.best_streak.streak} d'affilée`,
+    },
+    awards.worst_streak && {
+      icon: "😬",
+      label: "Série de mauvaises réponses",
+      detail: `${awards.worst_streak.nickname} — ${awards.worst_streak.streak} d'affilée`,
+    },
+    awards.most_consistent && { icon: "🎯", label: "Joueur le plus régulier", detail: awards.most_consistent.nickname },
+    awards.most_unpredictable && {
+      icon: "🎲",
+      label: "Joueur le plus imprévisible",
+      detail: awards.most_unpredictable.nickname,
+    },
+  ].filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      <h4 className="text-sm font-semibold text-magenta-400 mb-2">Statistiques amusantes</h4>
+      <div className="grid sm:grid-cols-2 gap-2">
+        {items.map((it) => (
+          <div key={it.label} className="bg-party-950/40 border border-party-800/60 rounded-lg px-3 py-2 text-xs">
+            <span className="mr-1.5">{it.icon}</span>
+            <span className="font-medium text-ink-100">{it.label}</span>
+            <span className="text-ink-400"> — {it.detail}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

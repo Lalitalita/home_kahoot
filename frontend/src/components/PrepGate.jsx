@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import Loading from "./Loading.jsx";
 import { usePartyMode } from "../context/PartyModeContext.jsx";
 
 // Hides the "before the party" pages once party mode has been switched on,
@@ -9,15 +10,15 @@ export default function PrepGate({ children }) {
 
   if (partyModeActive === null && !error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-ink-500">
-        Chargement...
+      <div className="min-h-dvh flex items-center justify-center">
+        <Loading />
       </div>
     );
   }
 
   if (partyModeActive) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+      <div className="min-h-dvh flex items-center justify-center p-6 text-center safe-p">
         <div className="card max-w-md space-y-4">
           <div className="text-4xl">🎉</div>
           <h1 className="text-2xl font-semibold text-ink-50">C'est parti !</h1>

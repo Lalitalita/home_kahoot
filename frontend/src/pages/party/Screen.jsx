@@ -31,9 +31,12 @@ export default function Screen() {
   const phase = state?.phase;
 
   return (
-    <div className="min-h-screen bg-ink-900 text-white flex flex-col p-8 overflow-hidden">
+    <div className="min-h-dvh bg-ink-900 text-white flex flex-col p-8 overflow-hidden party-scale-down">
       {!connected && (
-        <div className="fixed top-3 right-3 text-xs text-red-400 bg-ink-900/80 px-3 py-1 rounded-full">
+        <div
+          className="fixed text-xs text-red-400 bg-ink-900/80 px-3 py-1 rounded-full"
+          style={{ top: "max(0.75rem, env(safe-area-inset-top))", right: "max(0.75rem, env(safe-area-inset-right))" }}
+        >
           Connexion au serveur...
         </div>
       )}
@@ -238,6 +241,8 @@ function FinishedView({ state }) {
   // position, since `order` puts 1st place in the visual middle.
   const heights = ["h-56", "h-40", "h-28"];
   const medals = ["🥇", "🥈", "🥉"];
+  const predictions = state.predictions || [];
+  const bestPredictors = predictions.filter((p) => p.correct_slots === Math.max(...predictions.map((x) => x.correct_slots), 0) && p.correct_slots > 0);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8">
@@ -255,6 +260,15 @@ function FinishedView({ state }) {
           </div>
         ))}
       </div>
+      {bestPredictors.length > 0 && (
+        <div className="text-center">
+          <p className="text-magenta-400 font-semibold text-lg mb-1">🔮 Meilleur(s) pronostic(s)</p>
+          <p className="text-ink-200">
+            {bestPredictors.map((p) => p.predictor_nickname).join(", ")} —{" "}
+            {bestPredictors[0].correct_slots === 3 ? "podium parfait !" : `${bestPredictors[0].correct_slots}/3 places trouvées`}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

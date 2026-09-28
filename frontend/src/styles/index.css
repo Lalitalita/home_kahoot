@@ -27,6 +27,27 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* iOS Safari zooms the whole page on focus for any input under 16px,
+     regardless of the viewport's user-scalable/maximum-scale setting.
+     Forcing 16px only below the sm breakpoint keeps the smaller text-sm
+     inputs elsewhere (desktop, admin tables) untouched. */
+  @media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Very short landscape viewports (a phone on its side) — scale down the
+     TV screen / controller's big display type so it still fits without
+     clipping instead of overflowing off-screen. */
+  @media (max-height: 430px) and (orientation: landscape) {
+    .party-scale-down {
+      font-size: 0.7em;
+    }
+  }
 }
 
 @layer components {
@@ -51,6 +72,25 @@
   }
   .label {
     @apply block text-sm font-medium text-ink-400 mb-1;
+  }
+
+  /* Keep content clear of the iPhone notch / Dynamic Island and the home
+     indicator on full-bleed screens (party join/controller/TV). */
+  .safe-p {
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  .safe-pt {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-pb {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .spinner {
+    @apply inline-block w-5 h-5 rounded-full border-2 border-ink-600 border-t-party-400 animate-spin;
   }
 }
 

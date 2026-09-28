@@ -45,6 +45,7 @@ const emptyPartyInfo = {
   party_address: "",
   party_date: "",
   party_time: "",
+  gallery_url: "",
 };
 
 export default function AdminPlanning() {
@@ -69,6 +70,7 @@ export default function AdminPlanning() {
           party_address: settingsRes.party_address || "",
           party_date: settingsRes.party_date || "",
           party_time: settingsRes.party_time || "",
+          gallery_url: settingsRes.gallery_url || "",
         });
       })
       .catch((err) => setError(err.message));
@@ -176,6 +178,15 @@ export default function AdminPlanning() {
               className="input"
               value={partyInfo.party_time}
               onChange={(e) => setPartyInfo({ ...partyInfo, party_time: e.target.value })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">Lien album photo (Immich)</label>
+            <input
+              className="input"
+              placeholder="https://photos.amonita.fr/s/..."
+              value={partyInfo.gallery_url}
+              onChange={(e) => setPartyInfo({ ...partyInfo, gallery_url: e.target.value })}
             />
           </div>
         </div>

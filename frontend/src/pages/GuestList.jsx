@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "../api.js";
+import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 
 export default function GuestList() {
@@ -19,10 +20,10 @@ export default function GuestList() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
         <h1 className="text-2xl font-semibold text-ink-50">Qui sera là ?</h1>
 
-        {loading && <p className="text-ink-500">Chargement...</p>}
+        {loading && <Loading />}
         {error && <p className="text-rose-600">{error}</p>}
         {!loading && guests.length === 0 && (
           <p className="text-ink-500">La liste des invités n'a pas encore été publiée.</p>

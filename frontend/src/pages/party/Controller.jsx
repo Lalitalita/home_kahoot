@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { api } from "../../api.js";
 import Confetti from "../../components/Confetti.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
@@ -62,7 +63,7 @@ export default function Controller() {
   const myScore = myRank >= 0 ? state.leaderboard[myRank].score : 0;
 
   return (
-    <div className="min-h-screen flex flex-col p-4 bg-ink-900">
+    <div className="min-h-dvh flex flex-col safe-p bg-ink-900 party-scale-down">
       <div className="flex items-center justify-between mb-4">
         <span className="text-white font-semibold">👤 {nickname}</span>
         <span className={`text-xs ${connected ? "text-green-400" : "text-red-400"}`}>
@@ -72,10 +73,13 @@ export default function Controller() {
 
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         {!state || phase === "lobby" ? (
-          <div className="space-y-3">
+          <div className="space-y-3 w-full max-w-sm">
             <div className="text-5xl animate-pulse">⏳</div>
             <p className="text-ink-200 text-lg">En attente du début du quiz...</p>
             <p className="text-ink-500 text-sm">Regarde l'écran principal !</p>
+            {state?.leaderboard?.length >= 2 && (
+              <PredictionForm playerId={playerId} leaderboard={state.leaderboard} />
+            )}
           </div>
         ) : phase === "question" && !hasAnswered ? (
           <div className="w-full max-w-sm">
@@ -140,9 +144,10 @@ function FinalResult({ playerId, state }) {
   const top3 = state?.top3 || [];
   const rank = top3.findIndex((p) => p.player_id === playerId);
   const isTop3 = rank >= 0;
+  const myPrediction = (state?.predictions || []).find((p) => p.player_id === playerId);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-sm">
       {isTop3 && <Confetti />}
       <div className="text-6xl">{isTop3 ? "🏆" : "🎉"}</div>
       <p className="text-2xl font-bold text-white">
@@ -150,6 +155,91 @@ function FinalResult({ playerId, state }) {
       </p>
       <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
       <p className="text-ink-500 text-sm">Ton récap t'a été envoyé par email 📧</p>
+      {myPrediction && (
+        <div className="bg-ink-800/70 rounded-xl p-3 text-sm text-left">
+          <p className="text-magenta-400 font-semibold mb-1">🔮 Ton pronostic</p>
+          <p className="text-ink-300">
+            {myPrediction.correct_slots === 3
+              ? "Pile poil, chapeau ! 🎯"
+              : myPrediction.correct_slots > 0
+              ? `${myPrediction.correct_slots}/3 bonnes places trouvées`
+              : "Aucune place trouvée, tentative honorable !"}
+          </p>
+        </div>
+      )}
     </div>
+  );
+}
+
+function PredictionForm({ playerId, leaderboard }) {
+  const [first, setFirst] = useState("");
+  const [second, setSecond] = useState("");
+  const [third, setThird] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const names = leaderboard.map((p) => p.nickname);
+  const taken = [first, second, third].filter(Boolean);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!first || !second || !third) return;
+    setError("");
+    try {
+      await api.post(`/api/predictions?player_id=${playerId}`, {
+        first_nickname: first,
+        second_nickname: second,
+        third_nickname: third,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || "Erreur, réessaie.");
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="bg-ink-800/70 rounded-xl p-3 text-sm text-party-300">
+        🔮 Pronostic enregistré ! Tu peux le changer tant que le quiz n'a pas démarré.
+        <button className="block mt-1 text-ink-400 underline" onClick={() => setSubmitted(false)}>
+          Modifier
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="bg-ink-800/70 rounded-xl p-3 space-y-2 text-left">
+      <p className="text-sm text-magenta-400 font-semibold">🔮 Pronostique le podium</p>
+      {[
+        ["1er", first, setFirst],
+        ["2ème", second, setSecond],
+        ["3ème", third, setThird],
+      ].map(([label, value, setter]) => (
+        <select
+          key={label}
+          className="input w-full text-sm"
+          value={value}
+          onChange={(e) => setter(e.target.value)}
+        >
+          <option value="">{label}...</option>
+          {names
+            .filter((n) => n === value || !taken.includes(n))
+            .map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+        </select>
+      ))}
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+      <button
+        type="submit"
+        disabled={!first || !second || !third}
+        className="btn-primary w-full py-2 text-sm disabled:opacity-40"
+      >
+        Valider mon pronostic
+      </button>
+    </form>
   );
 }

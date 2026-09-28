@@ -18,7 +18,7 @@ export default function Join() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-ink-900">
+    <div className="min-h-dvh flex items-center justify-center safe-p bg-ink-900">
       <div className="card w-full max-w-sm space-y-5 text-center">
         <div className="text-5xl">🎮</div>
         <h1 className="text-2xl font-bold text-white">Rejoindre le quiz</h1>

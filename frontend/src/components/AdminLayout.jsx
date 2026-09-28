@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 
+import { LogoMark } from "./Logo.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const links = [
@@ -22,13 +23,16 @@ export default function AdminLayout({ title, children }) {
     <div className="min-h-screen">
       <nav className="sticky top-0 z-40 bg-ink-900/90 backdrop-blur-sm border-b border-ink-700">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <Link to="/admin" className="mr-1 shrink-0">
+            <LogoMark size={24} />
+          </Link>
           {visibleLinks.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
               end={l.end}
               className={({ isActive }) =>
-                `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                `shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
                   isActive
                     ? "bg-party-600 text-white"
                     : "text-ink-400 hover:text-ink-50 hover:bg-ink-800"
@@ -42,7 +46,7 @@ export default function AdminLayout({ title, children }) {
             <NavLink
               to="/admin/comptes"
               className={({ isActive }) =>
-                `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                `shrink-0 rounded-full px-3.5 py-2 text-sm font-medium transition ${
                   isActive
                     ? "bg-magenta-600 text-white"
                     : "text-magenta-400 hover:text-magenta-300 hover:bg-ink-800"
