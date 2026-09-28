@@ -37,7 +37,9 @@ function computeTimeline(dayStart, items) {
     const start = clock;
     const end = clock + Number(item.duration_minutes || 0);
     clock = end;
-    return { ...item, computedStart: toHHMM(start), computedEnd: toHHMM(end) };
+    // rawStart/rawEnd stay unwrapped (can exceed 24h) so the Gantt chart can
+    // position bars correctly; computedStart/End are the wrapped HH:MM labels.
+    return { ...item, rawStart: start, rawEnd: end, computedStart: toHHMM(start), computedEnd: toHHMM(end) };
   });
 }
 
@@ -226,6 +228,8 @@ export default function AdminPlanning() {
         </p>
       </div>
 
+      <GanttChart items={timeline} />
+
       <form onSubmit={handleCreate} className="card mb-6 grid sm:grid-cols-6 gap-3">
         <select
           className="input"
@@ -327,6 +331,85 @@ export default function AdminPlanning() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+const PX_PER_MIN = 2.4;
+
+function hourLabel(totalMinutes) {
+  const wrapped = ((totalMinutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}h`;
+}
+
+// A compact Gantt-style overview: one row per task, positioned and sized
+// along a shared hour axis so the whole day's shape is visible at a glance.
+function GanttChart({ items }) {
+  if (items.length === 0) return null;
+
+  const minStart = Math.floor(Math.min(...items.map((i) => i.rawStart)) / 60) * 60;
+  const maxEnd = Math.ceil(Math.max(...items.map((i) => i.rawEnd)) / 60) * 60;
+  const chartWidth = Math.max(maxEnd - minStart, 60) * PX_PER_MIN;
+
+  const hours = [];
+  for (let m = minStart; m <= maxEnd; m += 60) hours.push(m);
+
+  return (
+    <div className="card mb-6 p-0 overflow-hidden">
+      <div className="px-4 pt-4 pb-2">
+        <h2 className="font-semibold text-ink-50">Vue d'ensemble</h2>
+        <p className="text-xs text-ink-500">Aperçu du déroulé de la journée, façon Gantt.</p>
+      </div>
+      <div className="flex border-t border-ink-800">
+        <div className="w-28 sm:w-40 shrink-0 border-r border-ink-800">
+          <div className="h-7 border-b border-ink-800" />
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="h-10 flex items-center px-2 sm:px-3 border-b border-ink-800/60 text-xs text-ink-300 truncate"
+              title={item.title}
+            >
+              {item.title}
+            </div>
+          ))}
+        </div>
+        <div className="overflow-x-auto flex-1">
+          <div style={{ width: chartWidth, minWidth: "100%" }} className="relative">
+            <div className="h-7 relative border-b border-ink-800">
+              {hours.map((h) => (
+                <span
+                  key={h}
+                  className="absolute top-0 bottom-0 border-l border-ink-800/70 text-[10px] text-ink-500 pl-1 pt-1.5"
+                  style={{ left: (h - minStart) * PX_PER_MIN }}
+                >
+                  {hourLabel(h)}
+                </span>
+              ))}
+            </div>
+            {items.map((item) => {
+              const barWidth = Math.max(item.duration_minutes * PX_PER_MIN, 6);
+              return (
+                <div key={item.id} className="h-10 relative border-b border-ink-800/60">
+                  {hours.map((h) => (
+                    <span
+                      key={h}
+                      className="absolute top-0 bottom-0 border-l border-ink-900"
+                      style={{ left: (h - minStart) * PX_PER_MIN }}
+                    />
+                  ))}
+                  <div
+                    className={`absolute top-1.5 bottom-1.5 rounded-md ${TYPE_STYLE[item.type]} flex items-center px-2 text-[11px] text-white font-medium whitespace-nowrap overflow-hidden shadow`}
+                    style={{ left: (item.rawStart - minStart) * PX_PER_MIN, width: barWidth }}
+                    title={`${item.title} — ${item.computedStart} → ${item.computedEnd}`}
+                  >
+                    {barWidth > 55 ? `${item.computedStart}–${item.computedEnd}` : ""}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

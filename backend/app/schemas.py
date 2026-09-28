@@ -289,6 +289,15 @@ class AllergyConflict(BaseModel):
     guest_allergy_text: str
 
 
+class LinkedTask(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    title: str
+    type: ScheduleItemType
+    duration_minutes: int
+
+
 class BudgetItemAdmin(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -302,6 +311,15 @@ class BudgetItemAdmin(BaseModel):
     is_done: bool
     created_at: datetime
     conflicts: list[AllergyConflict] = []
+    linked_tasks: list[LinkedTask] = []
+    # Sum of every linked task's duration — the item's real total prep time
+    # once it's tied to one or more planning blocks. Falls back to
+    # prep_time_minutes on the frontend when no task is linked.
+    linked_minutes: int = 0
+
+
+class BudgetItemTaskLinksUpdate(BaseModel):
+    schedule_item_ids: list[str]
 
 
 class BudgetSummary(BaseModel):

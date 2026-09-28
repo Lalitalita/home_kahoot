@@ -12,6 +12,7 @@ function formatEuro(value) {
 export default function AdminBudget() {
   const [items, setItems] = useState([]);
   const [summary, setSummary] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [targetInput, setTargetInput] = useState("");
   const [error, setError] = useState(null);
 
@@ -19,11 +20,13 @@ export default function AdminBudget() {
     Promise.all([
       api.get("/api/admin/budget/items", { auth: true }),
       api.get("/api/admin/budget/summary", { auth: true }),
+      api.get("/api/admin/budget/tasks", { auth: true }),
     ])
-      .then(([itemsRes, summaryRes]) => {
+      .then(([itemsRes, summaryRes, tasksRes]) => {
         setItems(itemsRes);
         setSummary(summaryRes);
         setTargetInput(summaryRes.budget_target ?? "");
+        setTasks(tasksRes);
       })
       .catch((err) => setError(err.message));
   }
@@ -88,6 +91,7 @@ export default function AdminBudget() {
         title="Activités"
         category="activity"
         items={activities}
+        tasks={tasks}
         showAllergens={false}
         onChange={load}
       />
@@ -96,6 +100,7 @@ export default function AdminBudget() {
         title="Nourriture"
         category="food"
         items={food}
+        tasks={tasks}
         showAllergens
         onChange={load}
       />
@@ -118,7 +123,7 @@ function Stat({ label, value, highlight, danger }) {
   );
 }
 
-function BudgetSection({ title, category, items, showAllergens, onChange }) {
+function BudgetSection({ title, category, items, tasks, showAllergens, onChange }) {
   const [form, setForm] = useState(emptyForm);
   const total = items.reduce((sum, i) => sum + Number(i.price || 0), 0);
 
@@ -206,7 +211,7 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
               <th className="p-3">Fait</th>
               <th className="p-3">Nom</th>
               <th className="p-3">Prix</th>
-              <th className="p-3">Préparation</th>
+              <th className="p-3">Temps de préparation</th>
               {showAllergens && <th className="p-3">Allergènes</th>}
               {showAllergens && <th className="p-3">Compatibilité invités</th>}
               <th className="p-3">Notes</th>
@@ -234,12 +239,8 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
                   />
                   <span className="text-xs text-ink-500"> €</span>
                 </td>
-                <td className="p-3 w-28">
-                  <EditableCell
-                    value={item.prep_time_minutes != null ? String(item.prep_time_minutes) : ""}
-                    onSave={(v) => updateField(item, "prep_time_minutes", v === "" ? null : Number(v))}
-                  />
-                  <span className="text-xs text-ink-500"> min</span>
+                <td className="p-3 w-48">
+                  <PrepTimeCell item={item} tasks={tasks} onSave={updateField} onChange={onChange} />
                 </td>
                 {showAllergens && (
                   <td className="p-3 max-w-[10rem]">
@@ -280,6 +281,81 @@ function BudgetSection({ title, category, items, showAllergens, onChange }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// Shows either the manual "prep_time_minutes" (free entry, no tasks linked)
+// or the sum of every linked planning task's duration once at least one is
+// linked — that total then becomes read-only, since it's computed.
+function PrepTimeCell({ item, tasks, onSave, onChange }) {
+  const [open, setOpen] = useState(false);
+  const linked = item.linked_tasks || [];
+  const linkedIds = linked.map((t) => t.id);
+
+  async function toggleTask(taskId) {
+    const next = linkedIds.includes(taskId)
+      ? linkedIds.filter((id) => id !== taskId)
+      : [...linkedIds, taskId];
+    await api.put(`/api/admin/budget/items/${item.id}/tasks`, { schedule_item_ids: next }, { auth: true });
+    onChange();
+  }
+
+  return (
+    <div>
+      {linked.length > 0 ? (
+        <>
+          <div className="flex flex-wrap gap-1 mb-1">
+            {linked.map((t) => (
+              <span key={t.id} className="text-[10px] bg-ink-800 text-ink-300 rounded-full px-2 py-0.5">
+                {t.title}
+              </span>
+            ))}
+          </div>
+          <p className="text-sm text-ink-100 font-medium">
+            {item.linked_minutes} min <span className="text-ink-500 font-normal text-xs">(total lié)</span>
+          </p>
+        </>
+      ) : (
+        <div className="flex items-baseline gap-1">
+          <EditableCell
+            value={item.prep_time_minutes != null ? String(item.prep_time_minutes) : ""}
+            onSave={(v) => onSave(item, "prep_time_minutes", v === "" ? null : Number(v))}
+          />
+          <span className="text-xs text-ink-500">min</span>
+        </div>
+      )}
+      <button
+        type="button"
+        className="text-xs text-party-400 hover:underline mt-0.5"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? "Fermer" : linked.length > 0 ? "Modifier les tâches liées" : "Lier des tâches"}
+      </button>
+      {open && (
+        <div className="mt-1 w-full max-w-xs bg-ink-850 border border-ink-700 rounded-lg p-2 space-y-0.5 max-h-40 overflow-y-auto">
+          {tasks.length === 0 && (
+            <p className="text-xs text-ink-500 px-1 py-1">
+              Aucun bloc dans le planning pour l'instant.
+            </p>
+          )}
+          {tasks.map((t) => (
+            <label
+              key={t.id}
+              className="flex items-center gap-2 text-xs text-ink-200 px-1 py-1 hover:bg-ink-800 rounded cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={linkedIds.includes(t.id)}
+                onChange={() => toggleTask(t.id)}
+                className="accent-party-500 shrink-0"
+              />
+              <span className="truncate flex-1">{t.title}</span>
+              <span className="text-ink-500 shrink-0">{t.duration_minutes} min</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

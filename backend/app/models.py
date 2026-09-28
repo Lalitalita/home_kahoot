@@ -5,12 +5,14 @@ from datetime import datetime
 
 from sqlalchemy import (
     Boolean,
+    Column,
     DateTime,
     Enum,
     Float,
     ForeignKey,
     Integer,
     String,
+    Table,
     Text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -199,10 +201,25 @@ class ScheduleItem(Base):
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    budget_items: Mapped[list["BudgetItem"]] = relationship(
+        secondary="budget_item_schedule_items", back_populates="schedule_items"
+    )
+
 
 class BudgetCategory(str, enum.Enum):
     activity = "activity"
     food = "food"
+
+
+# Many-to-many: a food/activity budget item can be prepped across several
+# planning blocks (e.g. "Préparer la pâte" + "Décorer" for one cake), so its
+# total prep time is the sum of every linked block's duration.
+budget_item_schedule_items = Table(
+    "budget_item_schedule_items",
+    Base.metadata,
+    Column("budget_item_id", String, ForeignKey("budget_items.id", ondelete="CASCADE"), primary_key=True),
+    Column("schedule_item_id", String, ForeignKey("schedule_items.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class BudgetItem(Base):
@@ -216,12 +233,18 @@ class BudgetItem(Base):
     category: Mapped[BudgetCategory] = mapped_column(Enum(BudgetCategory))
     name: Mapped[str] = mapped_column(String)
     price: Mapped[float] = mapped_column(Float, default=0)
+    # Manual fallback, used only when no planning tasks are linked below —
+    # once tasks are linked, their summed duration is the source of truth.
     prep_time_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Comma/semicolon-separated free-text tags, e.g. "arachides, gluten".
     allergens: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_done: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    schedule_items: Mapped[list["ScheduleItem"]] = relationship(
+        secondary=budget_item_schedule_items, back_populates="budget_items"
+    )
 
 
 class GameSession(Base):

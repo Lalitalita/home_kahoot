@@ -5,14 +5,16 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.deps import require_permission
-from app.models import Admin, AppSettings, BudgetCategory, BudgetItem, Guest
+from app.models import Admin, AppSettings, BudgetCategory, BudgetItem, Guest, ScheduleItem
 from app.schemas import (
     AllergyConflict,
     BudgetItemAdmin,
     BudgetItemCreate,
+    BudgetItemTaskLinksUpdate,
     BudgetItemUpdate,
     BudgetSummary,
     BudgetTargetUpdate,
+    LinkedTask,
 )
 
 router = APIRouter(prefix="/api/admin/budget", tags=["budget"])
@@ -64,6 +66,8 @@ def _conflicts_for_item(item: BudgetItem, guests: list[Guest]) -> list[AllergyCo
 def _serialize(item: BudgetItem, guests: list[Guest]) -> BudgetItemAdmin:
     data = BudgetItemAdmin.model_validate(item)
     data.conflicts = _conflicts_for_item(item, guests)
+    data.linked_tasks = [LinkedTask.model_validate(t) for t in item.schedule_items]
+    data.linked_minutes = sum(t.duration_minutes for t in item.schedule_items)
     return data
 
 
@@ -123,6 +127,37 @@ def delete_item(
     db.delete(item)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/tasks", response_model=list[LinkedTask])
+def list_available_tasks(
+    db: Session = Depends(get_db), admin: Admin = Depends(require_permission("budget"))
+):
+    # Minimal read-only view of the planning blocks, just enough to build
+    # the task picker here — doesn't require the "planning" permission.
+    return db.query(ScheduleItem).order_by(ScheduleItem.order_index).all()
+
+
+@router.put("/items/{item_id}/tasks", response_model=BudgetItemAdmin)
+def set_item_tasks(
+    item_id: str,
+    payload: BudgetItemTaskLinksUpdate,
+    db: Session = Depends(get_db),
+    admin: Admin = Depends(require_permission("budget")),
+):
+    item = db.get(BudgetItem, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Élément introuvable")
+    tasks = (
+        db.query(ScheduleItem).filter(ScheduleItem.id.in_(payload.schedule_item_ids)).all()
+        if payload.schedule_item_ids
+        else []
+    )
+    item.schedule_items = tasks
+    db.commit()
+    db.refresh(item)
+    guests = db.query(Guest).all()
+    return _serialize(item, guests)
 
 
 @router.get("/summary", response_model=BudgetSummary)
