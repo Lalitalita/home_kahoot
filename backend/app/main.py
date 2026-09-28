@@ -14,6 +14,7 @@ from app.routers import (
     export,
     guests,
     messages,
+    predictions,
     questions,
     quiz_ws,
     results,
@@ -79,6 +80,7 @@ app.include_router(results.router)
 app.include_router(export.router)
 app.include_router(quiz_ws.router)
 app.include_router(quiz_ws.control_router)
+app.include_router(predictions.router)
 
 
 @app.get("/api/health")

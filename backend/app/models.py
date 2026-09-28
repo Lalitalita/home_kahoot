@@ -92,6 +92,10 @@ class Guest(Base):
     dietary_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     bringing_item: Mapped[str | None] = mapped_column(Text, nullable=True)
 
+    # Admin-set free-text group label (e.g. "BTS", "Collègues", "Amis d'enfance")
+    # used to cluster guests on the public "Qui est qui" social page.
+    social_group: Mapped[str | None] = mapped_column(String, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
@@ -167,6 +171,8 @@ class AppSettings(Base):
     party_date: Mapped[str | None] = mapped_column(String, nullable=True)
     # "HH:MM"
     party_time: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Shared Immich album URL, shown on the public Galerie page.
+    gallery_url: Mapped[str | None] = mapped_column(String, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
@@ -270,3 +276,19 @@ class GameAnswer(Base):
     points: Mapped[int] = mapped_column(Integer, default=0)
     response_time_ms: Mapped[int] = mapped_column(Integer, default=0)
     answered_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Prediction(Base):
+    """A player's guess, made in the lobby before the quiz starts, at who
+    will finish 1st/2nd/3rd. One per player per session — resubmitting
+    while still in the lobby overwrites the previous guess."""
+
+    __tablename__ = "predictions"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    session_id: Mapped[str] = mapped_column(ForeignKey("game_sessions.id", ondelete="CASCADE"))
+    player_id: Mapped[str] = mapped_column(ForeignKey("game_players.id", ondelete="CASCADE"))
+    first_nickname: Mapped[str] = mapped_column(String)
+    second_nickname: Mapped[str] = mapped_column(String)
+    third_nickname: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

@@ -11,9 +11,10 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.database import SessionLocal
 from app.email_sender import send_recap_email, send_session_recap_email
-from app.models import GameAnswer, GamePlayer, GameSession, Question, QuestionStatus
+from app.email_templates import admin_recap_html, player_recap_html
+from app.models import GameAnswer, GamePlayer, GameSession, Prediction, Question, QuestionStatus
 from app.pdf import build_player_recap_pdf, build_session_recap_pdf
-from app.recap import build_player_result, get_session_top3
+from app.recap import build_player_result, compute_session_awards, get_session_top3
 from app.schemas import GameSessionDetail
 from app.ws_manager import manager
 
@@ -238,30 +239,39 @@ class QuizEngine:
         if not self.state.session_id:
             return
         with SessionLocal() as db:
-            players = (
+            all_players = (
                 db.query(GamePlayer)
-                .filter(
-                    GamePlayer.session_id == self.state.session_id,
-                    GamePlayer.email.isnot(None),
-                    GamePlayer.email != "",
-                )
+                .filter(GamePlayer.session_id == self.state.session_id)
+                .order_by(GamePlayer.score.desc())
                 .all()
             )
-            player_ids = [p.id for p in players]
+            players_count = len(all_players)
+            rank_by_id = {p.id: i + 1 for i, p in enumerate(all_players)}
+            top3 = get_session_top3(db, self.state.session_id)
+            awards = compute_session_awards(db, self.state.session_id)
+            emailable_ids = [p.id for p in all_players if p.email]
 
-        for player_id in player_ids:
+        for player_id in emailable_ids:
             try:
                 with SessionLocal() as db:
                     db_player = db.get(GamePlayer, player_id)
                     if db_player is None or not db_player.email:
                         continue
                     result = build_player_result(db, db_player)
-                    top3 = get_session_top3(db, self.state.session_id)
                     pdf_bytes = build_player_recap_pdf(result, party_title=settings.app_name, top3=top3)
+                    html_body = player_recap_html(
+                        result,
+                        party_title=settings.app_name,
+                        top3=top3,
+                        rank=rank_by_id.get(player_id),
+                        players_count=players_count,
+                        awards=awards,
+                    )
                     sent = await asyncio.to_thread(
                         send_recap_email,
                         db_player.email,
                         db_player.nickname,
+                        html_body,
                         pdf_bytes,
                         settings.app_name,
                     )
@@ -298,9 +308,11 @@ class QuizEngine:
                     ended_at=session_row.ended_at,
                     players=[build_player_result(db, p) for p in players],
                 )
+                awards = compute_session_awards(db, self.state.session_id)
             pdf_bytes = build_session_recap_pdf(detail, party_title=settings.app_name)
+            html_body = admin_recap_html(detail, party_title=settings.app_name, awards=awards)
             await asyncio.to_thread(
-                send_session_recap_email, target, detail.label, len(detail.players), pdf_bytes, settings.app_name
+                send_session_recap_email, target, detail.label, html_body, pdf_bytes, settings.app_name
             )
         except Exception:
             logger.exception("Échec de l'envoi du récap complet de session à l'organisateur")
@@ -467,7 +479,40 @@ class QuizEngine:
             payload["answer_counts"] = self.state.answer_counts
         if self.state.phase == Phase.finished:
             payload["top3"] = self.leaderboard()[:3]
+            payload["predictions"] = self._predictions_summary()
         return payload
+
+    def _predictions_summary(self) -> list[dict]:
+        if not self.state.session_id:
+            return []
+        with SessionLocal() as db:
+            preds = (
+                db.query(Prediction).filter(Prediction.session_id == self.state.session_id).all()
+            )
+            if not preds:
+                return []
+            top3 = self.leaderboard()[:3]
+            actual = [p["nickname"] for p in top3] + [None, None, None]
+            summary = []
+            for pred in preds:
+                player = db.get(GamePlayer, pred.player_id)
+                correct_slots = sum(
+                    [
+                        pred.first_nickname == actual[0],
+                        pred.second_nickname == actual[1],
+                        pred.third_nickname == actual[2],
+                    ]
+                )
+                summary.append(
+                    {
+                        "predictor_nickname": player.nickname if player else "?",
+                        "first_nickname": pred.first_nickname,
+                        "second_nickname": pred.second_nickname,
+                        "third_nickname": pred.third_nickname,
+                        "correct_slots": correct_slots,
+                    }
+                )
+            return sorted(summary, key=lambda s: s["correct_slots"], reverse=True)
 
     async def _broadcast_state(self) -> None:
         await manager.broadcast(self.public_state())

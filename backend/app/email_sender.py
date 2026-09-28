@@ -1,9 +1,12 @@
-"""Sends the personal PDF recap by email once a quiz session finishes.
+"""Sends the rich HTML recap email once a quiz session finishes.
 
-Uses plain smtplib (blocking) — callers should run send_recap_email in a
-thread (e.g. asyncio.to_thread) rather than await it directly. Silently
-does nothing if SMTP isn't configured, so the app works fine without it;
-see .env.example for the OVH settings.
+Uses plain smtplib (blocking) — callers should run these in a thread
+(e.g. asyncio.to_thread) rather than await them directly. Silently does
+nothing if SMTP isn't configured, so the app works fine without it; see
+.env.example for the OVH settings.
+
+The HTML body (built in app.email_templates) is the primary content now;
+the PDF is attached as a secondary copy, not the main event.
 """
 
 import logging
@@ -18,27 +21,14 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 
 
-def _html_body(nickname: str) -> str:
-    return (
-        f"Hello {nickname}, <br>"
-        "Merci d'avoir participé au quiz de mon anniversaire ! <br>"
-        "Tu pourras retrouver en pièce jointe un pdf avec tes réponses et les réponses justes <br>"
-        "Merci, <br>"
-        "Lana"
-    )
-
-
-def _text_body(nickname: str) -> str:
-    return (
-        f"Hello {nickname},\n"
-        "Merci d'avoir participé au quiz de mon anniversaire !\n"
-        "Tu pourras retrouver en pièce jointe un pdf avec tes réponses et les réponses justes\n"
-        "Merci,\n"
-        "Lana"
-    )
-
-
-def _send(to_email: str, subject: str, text_body: str, html_body: str, pdf_bytes: bytes, filename: str) -> bool:
+def _send(
+    to_email: str,
+    subject: str,
+    text_fallback: str,
+    html_body: str,
+    pdf_bytes: bytes | None,
+    pdf_filename: str,
+) -> bool:
     settings = get_settings()
     if not settings.smtp_configured:
         logger.info("SMTP non configuré : email non envoyé à %s", to_email)
@@ -50,13 +40,14 @@ def _send(to_email: str, subject: str, text_body: str, html_body: str, pdf_bytes
     message["To"] = to_email
 
     alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(text_body, "plain", "utf-8"))
+    alt.attach(MIMEText(text_fallback, "plain", "utf-8"))
     alt.attach(MIMEText(html_body, "html", "utf-8"))
     message.attach(alt)
 
-    attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
-    attachment.add_header("Content-Disposition", "attachment", filename=filename)
-    message.attach(attachment)
+    if pdf_bytes:
+        attachment = MIMEApplication(pdf_bytes, _subtype="pdf")
+        attachment.add_header("Content-Disposition", "attachment", filename=pdf_filename)
+        message.attach(attachment)
 
     try:
         if settings.smtp_use_ssl:
@@ -73,45 +64,47 @@ def _send(to_email: str, subject: str, text_body: str, html_body: str, pdf_bytes
         return False
 
 
-def send_recap_email(to_email: str, nickname: str, pdf_bytes: bytes, party_title: str) -> bool:
+def send_recap_email(
+    to_email: str, nickname: str, html_body: str, pdf_bytes: bytes | None, party_title: str
+) -> bool:
+    text_fallback = (
+        f"Hello {nickname},\n\n"
+        f"Merci d'avoir participé au quiz de {party_title} ! "
+        "Ton récap (score, classement, réponses) est dans cet email — ouvre-le dans un client "
+        "qui affiche le HTML pour le voir correctement.\n\n"
+        "Merci,\nLana"
+    )
     return _send(
         to_email,
         subject=f"Ton récap du quiz — {party_title}",
-        text_body=_text_body(nickname),
-        html_body=_html_body(nickname),
+        text_fallback=text_fallback,
+        html_body=html_body,
         pdf_bytes=pdf_bytes,
-        filename=f"recap-{nickname}.pdf",
-    )
-
-
-def _admin_html_body(session_label: str, players_count: int) -> str:
-    return (
-        f"Coucou, <br>"
-        f"Voici le récap complet de la session « {session_label} » : "
-        f"les réponses de chacun des {players_count} joueurs, le classement et le podium. <br>"
-        "À bientôt !"
-    )
-
-
-def _admin_text_body(session_label: str, players_count: int) -> str:
-    return (
-        f"Coucou,\n"
-        f"Voici le récap complet de la session « {session_label} » : "
-        f"les réponses de chacun des {players_count} joueurs, le classement et le podium.\n"
-        "À bientôt !"
+        pdf_filename=f"recap-{nickname}.pdf",
     )
 
 
 def send_session_recap_email(
-    to_email: str, session_label: str, players_count: int, pdf_bytes: bytes, party_title: str
+    to_email: str,
+    session_label: str,
+    html_body: str,
+    pdf_bytes: bytes | None,
+    party_title: str,
 ) -> bool:
     """The organizer's own copy: every player, every answer, the podium —
     sent once a session ends, separate from each player's personal recap."""
+    text_fallback = (
+        "Coucou,\n\n"
+        f"Voici le récap complet de la session « {session_label} » : classement, statistiques "
+        "et réponses de chaque joueur — ouvre cet email dans un client qui affiche le HTML pour "
+        "le voir correctement.\n\n"
+        "À bientôt !"
+    )
     return _send(
         to_email,
         subject=f"Récap complet — {party_title} ({session_label})",
-        text_body=_admin_text_body(session_label, players_count),
-        html_body=_admin_html_body(session_label, players_count),
+        text_fallback=text_fallback,
+        html_body=html_body,
         pdf_bytes=pdf_bytes,
-        filename=f"recap-complet-{session_label}.pdf",
+        pdf_filename=f"recap-complet-{session_label}.pdf",
     )

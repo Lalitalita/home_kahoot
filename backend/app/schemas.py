@@ -107,6 +107,7 @@ class GuestPublic(BaseModel):
     photo_url: str | None
     description: str | None
     bringing_item: str | None
+    social_group: str | None
 
 
 class GuestSelf(BaseModel):
@@ -125,6 +126,7 @@ class GuestSelf(BaseModel):
     intolerances: str | None
     dietary_comment: str | None
     bringing_item: str | None
+    social_group: str | None
 
 
 class GuestSelfUpdate(BaseModel):
@@ -158,6 +160,7 @@ class GuestUpdateAdmin(BaseModel):
     dietary_comment: str | None = None
     bringing_item: str | None = None
     email: str | None = None
+    social_group: str | None = None
 
 
 # ---------- Questions ----------
@@ -246,6 +249,7 @@ class AppSettingsPublic(BaseModel):
     party_address: str | None = None
     party_date: str | None = None
     party_time: str | None = None
+    gallery_url: str | None = None
 
 
 class PartyInfoUpdate(BaseModel):
@@ -253,6 +257,7 @@ class PartyInfoUpdate(BaseModel):
     party_address: str | None = None
     party_date: str | None = None
     party_time: str | None = None
+    gallery_url: str | None = None
 
 
 # ---------- Budget & lists ----------
@@ -401,3 +406,48 @@ class GameSessionDetail(BaseModel):
     started_at: datetime
     ended_at: datetime | None
     players: list[PlayerResult]
+
+
+# ---------- Fun stats / awards ----------
+
+
+class AnswerHighlight(BaseModel):
+    nickname: str
+    question_text: str
+    response_time_ms: int
+
+
+class StreakHighlight(BaseModel):
+    nickname: str
+    streak: int
+
+
+class PlayerHighlight(BaseModel):
+    nickname: str
+
+
+class SessionAwards(BaseModel):
+    fastest_answer: AnswerHighlight | None = None
+    slowest_answer: AnswerHighlight | None = None
+    best_streak: StreakHighlight | None = None
+    worst_streak: StreakHighlight | None = None
+    most_consistent: PlayerHighlight | None = None
+    most_unpredictable: PlayerHighlight | None = None
+
+
+# ---------- Podium predictions ----------
+
+
+class PredictionCreate(BaseModel):
+    first_nickname: str
+    second_nickname: str
+    third_nickname: str
+
+
+class PredictionResult(BaseModel):
+    player_id: str
+    predictor_nickname: str
+    first_nickname: str
+    second_nickname: str
+    third_nickname: str
+    correct_slots: int

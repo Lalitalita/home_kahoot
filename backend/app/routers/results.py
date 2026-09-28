@@ -11,15 +11,17 @@ from app.config import get_settings
 from app.database import get_db
 from app.deps import require_permission
 from app.email_sender import send_recap_email
+from app.email_templates import player_recap_html
 from app.models import Admin, GameAnswer, GamePlayer, GameSession
 from app.pdf import build_player_recap_pdf, build_session_recap_pdf
-from app.recap import build_player_result, get_session_top3
+from app.recap import build_player_result, compute_session_awards, get_session_top3
 from app.schemas import (
     GameSessionDetail,
     GameSessionSummary,
     PlayerEmailUpdate,
     PlayerResendEmail,
     PlayerResult,
+    SessionAwards,
 )
 
 router = APIRouter(prefix="/api", tags=["results"])
@@ -79,6 +81,13 @@ def get_session(
     session_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("results"))
 ):
     return _get_session_detail(db, session_id)
+
+
+@router.get("/admin/sessions/{session_id}/awards", response_model=SessionAwards)
+def get_session_awards(
+    session_id: str, db: Session = Depends(get_db), admin: Admin = Depends(require_permission("results"))
+):
+    return compute_session_awards(db, session_id)
 
 
 @router.delete("/admin/sessions/{session_id}")
@@ -182,10 +191,28 @@ async def resend_player_email(
         raise HTTPException(status_code=400, detail="Aucune adresse email pour ce joueur")
 
     result = build_player_result(db, player)
-    top3 = get_session_top3(db, player.session_id) if player.session_id else []
-    pdf_bytes = build_player_recap_pdf(result, party_title=get_settings().app_name, top3=top3)
+    rank = players_count = None
+    top3 = []
+    awards = None
+    if player.session_id:
+        session_players = (
+            db.query(GamePlayer)
+            .filter(GamePlayer.session_id == player.session_id)
+            .order_by(GamePlayer.score.desc())
+            .all()
+        )
+        players_count = len(session_players)
+        rank = next((i + 1 for i, p in enumerate(session_players) if p.id == player.id), None)
+        top3 = get_session_top3(db, player.session_id)
+        awards = compute_session_awards(db, player.session_id)
+
+    party_title = get_settings().app_name
+    pdf_bytes = build_player_recap_pdf(result, party_title=party_title, top3=top3)
+    html_body = player_recap_html(
+        result, party_title=party_title, top3=top3, rank=rank, players_count=players_count, awards=awards
+    )
     sent = await asyncio.to_thread(
-        send_recap_email, target, player.nickname, pdf_bytes, get_settings().app_name
+        send_recap_email, target, player.nickname, html_body, pdf_bytes, party_title
     )
     if not sent:
         raise HTTPException(
