@@ -20,7 +20,7 @@ export default function GuestList() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-8 space-y-6 animate-fade-in">
         <h1 className="text-2xl font-semibold text-ink-50">Qui sera là ?</h1>
 
         {loading && <Loading />}

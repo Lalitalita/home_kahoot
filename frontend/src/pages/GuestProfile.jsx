@@ -79,7 +79,7 @@ export default function GuestProfile() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+      <div className="max-w-2xl mx-auto px-4 py-8 pb-24 sm:pb-8 space-y-6 animate-fade-in">
         {loading && <Loading />}
         {error && !guest && <p className="text-rose-600">{error}</p>}
 

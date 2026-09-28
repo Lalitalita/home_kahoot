@@ -22,7 +22,6 @@ import Controller from "./pages/party/Controller.jsx";
 import Join from "./pages/party/Join.jsx";
 import Screen from "./pages/party/Screen.jsx";
 import QuestionSubmit from "./pages/QuestionSubmit.jsx";
-import Social from "./pages/Social.jsx";
 
 export default function App() {
   return (
@@ -32,7 +31,6 @@ export default function App() {
       <Route path="/invites/:accessCode" element={<PrepGate><GuestProfile /></PrepGate>} />
       <Route path="/quiz/proposer" element={<PrepGate><QuestionSubmit /></PrepGate>} />
       <Route path="/mur" element={<MessageWall />} />
-      <Route path="/qui-est-qui" element={<PrepGate><Social /></PrepGate>} />
       <Route path="/galerie" element={<PrepGate><Gallery /></PrepGate>} />
 
       <Route path="/soiree" element={<Join />} />

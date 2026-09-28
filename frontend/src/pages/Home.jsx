@@ -30,7 +30,7 @@ export default function Home() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-10 space-y-8 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-4 py-10 pb-24 sm:pb-10 space-y-8 animate-fade-in">
         <div className="text-center space-y-3">
           <LogoMark size={56} className="mx-auto" />
           <h1 className="text-3xl font-semibold text-ink-50">Bienvenue à la fête</h1>

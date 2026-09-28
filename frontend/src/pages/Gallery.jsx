@@ -5,22 +5,34 @@ import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 
 export default function Gallery() {
-  const [url, setUrl] = useState(null);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [iframeFailed, setIframeFailed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     api
       .get("/api/settings")
-      .then((s) => setUrl(s.gallery_url || ""))
-      .catch(() => setUrl(""))
+      .then(setSettings)
+      .catch(() => setSettings({}))
       .finally(() => setLoading(false));
   }, []);
+
+  async function copyPassword() {
+    try {
+      await navigator.clipboard.writeText(settings.gallery_password);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — the password is still shown on screen.
+    }
+  }
+
+  const url = settings?.gallery_url;
 
   return (
     <div>
       <NavBar />
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+      <div className="max-w-3xl mx-auto px-4 py-8 pb-24 sm:pb-8 space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl font-semibold text-ink-50">Galerie photo</h1>
           <p className="text-ink-500 text-sm mt-1">
@@ -48,21 +60,23 @@ export default function Gallery() {
               📸 Ouvrir l'album partagé
             </a>
 
-            {!iframeFailed && (
-              <div className="card p-0 overflow-hidden">
-                <iframe
-                  src={url}
-                  title="Album photo"
-                  className="w-full aspect-[4/3] sm:aspect-video border-0"
-                  loading="lazy"
-                  onError={() => setIframeFailed(true)}
-                />
+            {settings.gallery_password && (
+              <div className="card space-y-2">
+                <p className="text-sm text-ink-400">🔒 L'album est protégé par un mot de passe :</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-ink-950/60 border border-ink-700 rounded-lg px-3 py-2.5 text-lg font-mono text-party-300 tracking-wide">
+                    {settings.gallery_password}
+                  </code>
+                  <button
+                    className="btn-secondary py-2.5 px-4 shrink-0"
+                    onClick={copyPassword}
+                    type="button"
+                  >
+                    {copied ? "Copié !" : "Copier"}
+                  </button>
+                </div>
               </div>
             )}
-            <p className="text-xs text-ink-600">
-              Si l'aperçu ne s'affiche pas ci-dessus, utilise le bouton pour ouvrir l'album dans un
-              nouvel onglet.
-            </p>
           </>
         )}
       </div>

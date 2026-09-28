@@ -66,7 +66,7 @@ export default function QuestionSubmit() {
   return (
     <div>
       <NavBar />
-      <div className="max-w-xl mx-auto px-4 py-8 space-y-6 animate-fade-in">
+      <div className="max-w-xl mx-auto px-4 py-8 pb-24 sm:pb-8 space-y-6 animate-fade-in">
         <h1 className="text-2xl font-semibold text-ink-50">Proposer une question</h1>
         <p className="text-ink-400 text-sm">
           Propose une question à choix multiple (4 réponses). L'organisateur validera ta question
