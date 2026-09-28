@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 
+import { ConfettiIcon } from "./icons.jsx";
 import Loading from "./Loading.jsx";
 import { usePartyMode } from "../context/PartyModeContext.jsx";
 
@@ -20,7 +21,7 @@ export default function PrepGate({ children }) {
     return (
       <div className="min-h-dvh flex items-center justify-center p-6 text-center safe-p">
         <div className="card max-w-md space-y-4">
-          <div className="text-4xl">🎉</div>
+          <ConfettiIcon size={40} className="mx-auto text-party-400" />
           <h1 className="text-2xl font-semibold text-ink-50">C'est parti !</h1>
           <p className="text-ink-400">
             Le mode soirée est activé, les pages de préparation sont fermées.

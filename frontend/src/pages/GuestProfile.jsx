@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 
 import { api } from "../api.js";
 import EventInfoCard from "../components/EventInfoCard.jsx";
+import { UserIcon } from "../components/icons.jsx";
 import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 import { setStoredGuestCode } from "../guestCode.js";
@@ -92,7 +93,7 @@ export default function GuestProfile() {
                 {guest.photo_url ? (
                   <img src={guest.photo_url} className="w-full h-full object-cover" alt="" />
                 ) : (
-                  "🙂"
+                  <UserIcon size={32} className="text-ink-400" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

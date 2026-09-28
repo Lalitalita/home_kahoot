@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "../api.js";
+import { UserIcon } from "../components/icons.jsx";
 import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 
@@ -36,7 +37,7 @@ export default function GuestList() {
                 {g.photo_url ? (
                   <img src={g.photo_url} alt={g.name} className="w-full h-full object-cover" />
                 ) : (
-                  "🙂"
+                  <UserIcon size={22} className="text-ink-400" />
                 )}
               </div>
               <div>

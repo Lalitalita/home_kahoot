@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { UserIcon } from "../../components/icons.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function MyAccount() {
@@ -40,7 +41,7 @@ function PhotoCard({ me, onUpdated }) {
         {me?.photo_url ? (
           <img src={me.photo_url} className="w-full h-full object-cover" alt="" />
         ) : (
-          "🙂"
+          <UserIcon size={28} className="text-ink-400" />
         )}
       </div>
       <div>

@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import {
+  ChatIcon,
+  CheckCircleIcon,
+  CoinIcon,
+  ConfettiIcon,
+  MoonIcon,
+  QuestionIcon,
+  UsersIcon,
+} from "../../components/icons.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function AdminDashboard() {
@@ -64,7 +73,9 @@ export default function AdminDashboard() {
         }`}
       >
         <div className="flex items-center gap-4">
-          <span className="text-3xl shrink-0">{partyMode ? "🎉" : "🌙"}</span>
+          <span className={`shrink-0 ${partyMode ? "text-magenta-400" : "text-ink-400"}`}>
+            {partyMode ? <ConfettiIcon size={32} /> : <MoonIcon size={32} />}
+          </span>
           <div>
             <h2 className="font-semibold text-ink-50">Mode soirée</h2>
             <p className={`text-sm ${partyMode ? "text-magenta-300" : "text-ink-400"}`}>
@@ -81,11 +92,11 @@ export default function AdminDashboard() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {hasPermission("guests") && stats.guests !== undefined && (
-          <StatCard icon="👥" label="Invités" value={stats.guests} to="/admin/invites" />
+          <StatCard Icon={UsersIcon} label="Invités" value={stats.guests} to="/admin/invites" />
         )}
         {hasPermission("budget") && stats.budgetTotal !== undefined && (
           <StatCard
-            icon="💶"
+            Icon={CoinIcon}
             label={`Budget prévu${stats.budgetTarget ? ` / ${stats.budgetTarget} €` : ""}`}
             value={`${stats.budgetTotal.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} €`}
             to="/admin/budget"
@@ -95,14 +106,14 @@ export default function AdminDashboard() {
         {hasPermission("questions") && stats.pendingQuestions !== undefined && (
           <>
             <StatCard
-              icon="❓"
+              Icon={QuestionIcon}
               label="Questions en attente"
               value={stats.pendingQuestions}
               to="/admin/questions"
               highlight={stats.pendingQuestions > 0}
             />
             <StatCard
-              icon="✅"
+              Icon={CheckCircleIcon}
               label="Questions acceptées"
               value={stats.acceptedQuestions}
               to="/admin/questions"
@@ -110,14 +121,14 @@ export default function AdminDashboard() {
           </>
         )}
         {hasPermission("messages") && stats.messages !== undefined && (
-          <StatCard icon="💬" label="Messages" value={stats.messages} to="/admin/messages" />
+          <StatCard Icon={ChatIcon} label="Messages" value={stats.messages} to="/admin/messages" />
         )}
       </div>
     </AdminLayout>
   );
 }
 
-function StatCard({ icon, label, value, to, highlight }) {
+function StatCard({ Icon, label, value, to, highlight }) {
   return (
     <Link
       to={to}
@@ -125,8 +136,8 @@ function StatCard({ icon, label, value, to, highlight }) {
         highlight ? "border-amber-400" : ""
       }`}
     >
-      <span className="w-10 h-10 rounded-xl bg-party-900/60 text-lg flex items-center justify-center shrink-0">
-        {icon}
+      <span className="w-10 h-10 rounded-xl bg-party-900/60 text-party-300 flex items-center justify-center shrink-0">
+        <Icon size={20} />
       </span>
       <div className="min-w-0">
         <div className="text-2xl font-semibold text-ink-50 leading-tight">{value}</div>

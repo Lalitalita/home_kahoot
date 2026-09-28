@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "../api.js";
+import { BalloonIcon, MapPinIcon, SparkleIcon } from "./icons.jsx";
 
 function useCountdown(partyDate, partyTime) {
   const [now, setNow] = useState(() => Date.now());
@@ -64,16 +65,18 @@ export default function EventInfoCard() {
   return (
     <div className="card space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-lg font-semibold text-ink-50">📍 Infos pratiques</h2>
+        <h2 className="text-lg font-semibold text-ink-50 flex items-center gap-1.5">
+          <MapPinIcon size={18} className="text-party-400" /> Infos pratiques
+        </h2>
         {countdown && !countdown.past && (
-          <span className="text-xs font-mono bg-party-950/50 border border-party-800/60 text-party-300 rounded-full px-3 py-1">
-            🎈 J-{countdown.days}
+          <span className="text-xs font-mono bg-party-950/50 border border-party-800/60 text-party-300 rounded-full px-3 py-1 flex items-center gap-1.5">
+            <BalloonIcon size={14} /> J-{countdown.days}
             {countdown.days === 0 ? `, ${countdown.hours}h` : ""}
           </span>
         )}
         {countdown?.past && (
-          <span className="text-xs font-mono bg-magenta-950/50 border border-magenta-800/60 text-magenta-300 rounded-full px-3 py-1">
-            🎉 C'est le jour J !
+          <span className="text-xs font-mono bg-magenta-950/50 border border-magenta-800/60 text-magenta-300 rounded-full px-3 py-1 flex items-center gap-1.5">
+            <SparkleIcon size={14} /> C'est le jour J !
           </span>
         )}
       </div>

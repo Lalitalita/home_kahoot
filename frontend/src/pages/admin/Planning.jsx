@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { PinIcon } from "../../components/icons.jsx";
 
 const TYPE_LABEL = {
   activity: "Activité",
@@ -91,8 +92,13 @@ export default function AdminPlanning() {
   async function savePartyInfo(e) {
     e.preventDefault();
     setPartyInfoSaved(false);
-    await api.patch("/api/admin/settings/party-info", partyInfo, { auth: true });
-    setPartyInfoSaved(true);
+    setError(null);
+    try {
+      await api.patch("/api/admin/settings/party-info", partyInfo, { auth: true });
+      setPartyInfoSaved(true);
+    } catch (err) {
+      setError(err.message || "Échec de l'enregistrement");
+    }
   }
 
   async function handleCreate(e) {
@@ -269,7 +275,9 @@ export default function AdminPlanning() {
                   {TYPE_LABEL[item.type]}
                 </span>
                 {item.fixed_start_time && (
-                  <span className="text-xs text-ink-500">📌 heure fixe {item.fixed_start_time}</span>
+                  <span className="text-xs text-ink-500 inline-flex items-center gap-1">
+                    <PinIcon size={12} /> heure fixe {item.fixed_start_time}
+                  </span>
                 )}
               </div>
               <EditableCell value={item.title} onSave={(v) => updateField(item, "title", v)} bold />

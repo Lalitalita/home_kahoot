@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { api } from "../api.js";
+import { CameraIcon, LockIcon } from "../components/icons.jsx";
 import Loading from "../components/Loading.jsx";
 import NavBar from "../components/NavBar.jsx";
 
@@ -57,12 +58,14 @@ export default function Gallery() {
               rel="noopener noreferrer"
               className="btn-primary inline-flex items-center gap-2 w-full sm:w-auto justify-center py-3.5 text-base"
             >
-              📸 Ouvrir l'album partagé
+              <CameraIcon size={20} /> Ouvrir l'album partagé
             </a>
 
             {settings.gallery_password && (
               <div className="card space-y-2">
-                <p className="text-sm text-ink-400">🔒 L'album est protégé par un mot de passe :</p>
+                <p className="text-sm text-ink-400 flex items-center gap-1.5">
+                  <LockIcon size={16} className="text-party-400" /> L'album est protégé par un mot de passe :
+                </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-ink-950/60 border border-ink-700 rounded-lg px-3 py-2.5 text-lg font-mono text-party-300 tracking-wide">
                     {settings.gallery_password}

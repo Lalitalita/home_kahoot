@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { UserIcon } from "../../components/icons.jsx";
 
 const SECTION_LABEL = {
   guests: "Invités",
@@ -186,7 +187,7 @@ function AccountRow({ account, sections, onUpdatePermissions, onResetPassword, o
           {account.photo_url ? (
             <img src={account.photo_url} className="w-full h-full object-cover" alt="" />
           ) : (
-            "🙂"
+            <UserIcon size={22} className="text-ink-400" />
           )}
         </div>
         <div className="flex-1 min-w-0">

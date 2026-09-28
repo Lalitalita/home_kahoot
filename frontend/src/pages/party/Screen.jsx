@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 
 import Confetti from "../../components/Confetti.jsx";
+import {
+  CheckIcon,
+  ConfettiIcon,
+  CrystalBallIcon,
+  MedalIcon,
+  TimerIcon,
+  TrophyIcon,
+  UserIcon,
+  XIcon,
+} from "../../components/icons.jsx";
 import QuizProgress from "../../components/QuizProgress.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
@@ -60,7 +70,10 @@ function Lobby({ state }) {
   const origin = window.location.origin;
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
-      <h1 className="font-display text-6xl font-extrabold">🎉 Quiz d'anniversaire 🎉</h1>
+      <h1 className="font-display text-6xl font-extrabold flex items-center justify-center gap-4">
+        <ConfettiIcon size={52} className="text-party-400" /> Quiz d'anniversaire
+        <ConfettiIcon size={52} className="text-magenta-400" />
+      </h1>
       <p className="text-2xl text-ink-200">
         Rejoins sur <span className="font-mono text-party-400">{origin}/soiree</span>
       </p>
@@ -76,8 +89,8 @@ function Lobby({ state }) {
             {p.photo_url ? (
               <img src={p.photo_url} alt="" className="w-8 h-8 rounded-full object-cover" />
             ) : (
-              <span className="w-8 h-8 rounded-full bg-ink-700 flex items-center justify-center text-sm">
-                🙂
+              <span className="w-8 h-8 rounded-full bg-ink-700 flex items-center justify-center text-ink-400">
+                <UserIcon size={18} />
               </span>
             )}
             {p.nickname}
@@ -107,9 +120,7 @@ function Timer({ startedAt, durationSeconds }) {
 
   return (
     <div className="max-w-md mx-auto w-full flex items-center gap-3">
-      <span className="text-xl shrink-0" aria-hidden="true">
-        ⏱️
-      </span>
+      <TimerIcon size={22} className="shrink-0 text-party-400" />
       <div className="flex-1 h-2.5 bg-ink-800 rounded-full overflow-hidden">
         <div
           className={`h-full transition-[width] duration-100 ${
@@ -175,7 +186,7 @@ function RevealView({ state }) {
                   isCorrect ? "bg-green-500" : "bg-red-500"
                 }`}
               >
-                {isCorrect ? "✓" : "✕"}
+                {isCorrect ? <CheckIcon size={20} /> : <XIcon size={20} />}
               </span>
               <div className="flex-1 bg-ink-800 rounded-xl overflow-hidden relative h-12 border border-ink-700">
                 <div
@@ -203,7 +214,10 @@ function RevealView({ state }) {
 function LeaderboardView({ state }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-6">
-      <h2 className="font-display text-5xl font-extrabold">🏆 Classement 🏆</h2>
+      <h2 className="font-display text-5xl font-extrabold flex items-center gap-4">
+        <TrophyIcon size={44} className="text-amber-400" /> Classement
+        <TrophyIcon size={44} className="text-amber-400" />
+      </h2>
       <div className="w-full max-w-xl space-y-2">
         {state.leaderboard.map((p, i) => (
           <div
@@ -240,20 +254,21 @@ function FinishedView({ state }) {
   // Indexed by rank (0 = 1st place, 1 = 2nd, 2 = 3rd) — not by display
   // position, since `order` puts 1st place in the visual middle.
   const heights = ["h-56", "h-40", "h-28"];
-  const medals = ["🥇", "🥈", "🥉"];
+  const medalTones = ["gold", "silver", "bronze"];
   const predictions = state.predictions || [];
   const bestPredictors = predictions.filter((p) => p.correct_slots === Math.max(...predictions.map((x) => x.correct_slots), 0) && p.correct_slots > 0);
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-8">
       <Confetti count={120} />
-      <h2 className="font-display text-5xl font-extrabold text-center">
-        🎉 Merci d'avoir joué ! 🎉
+      <h2 className="font-display text-5xl font-extrabold text-center flex items-center justify-center gap-4">
+        <ConfettiIcon size={44} className="text-party-400" /> Merci d'avoir joué !
+        <ConfettiIcon size={44} className="text-magenta-400" />
       </h2>
       <div className="flex items-end gap-6">
         {order.map((i) => (
           <div key={top3[i].player_id} className="flex flex-col items-center gap-2">
-            <div className="text-4xl">{medals[i]}</div>
+            <MedalIcon tone={medalTones[i]} size={40} />
             <div className="text-xl font-bold">{top3[i].nickname}</div>
             <div className="font-mono text-party-300">{top3[i].score} pts</div>
             <div className={`w-32 ${heights[i]} bg-party-700 rounded-t-2xl`} />
@@ -262,7 +277,9 @@ function FinishedView({ state }) {
       </div>
       {bestPredictors.length > 0 && (
         <div className="text-center">
-          <p className="text-magenta-400 font-semibold text-lg mb-1">🔮 Meilleur(s) pronostic(s)</p>
+          <p className="text-magenta-400 font-semibold text-lg mb-1 flex items-center justify-center gap-2">
+            <CrystalBallIcon size={20} /> Meilleur(s) pronostic(s)
+          </p>
           <p className="text-ink-200">
             {bestPredictors.map((p) => p.predictor_nickname).join(", ")} —{" "}
             {bestPredictors[0].correct_slots === 3 ? "podium parfait !" : `${bestPredictors[0].correct_slots}/3 places trouvées`}

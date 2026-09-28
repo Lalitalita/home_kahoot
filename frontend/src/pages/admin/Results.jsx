@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api, downloadFile } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { BoltIcon, DiceIcon, FireIcon, FrownIcon, TargetIcon, TurtleIcon } from "../../components/icons.jsx";
 import Loading from "../../components/Loading.jsx";
 
 function formatDate(iso) {
@@ -155,28 +156,38 @@ function AwardsPanel({ awards }) {
   if (!awards) return null;
   const items = [
     awards.fastest_answer && {
-      icon: "⚡",
+      Icon: BoltIcon,
+      tone: "text-amber-400",
       label: "Réponse la plus rapide",
       detail: `${awards.fastest_answer.nickname} en ${(awards.fastest_answer.response_time_ms / 1000).toFixed(1)}s`,
     },
     awards.slowest_answer && {
-      icon: "🐢",
+      Icon: TurtleIcon,
+      tone: "text-emerald-400",
       label: "Réponse la plus lente",
       detail: `${awards.slowest_answer.nickname} en ${(awards.slowest_answer.response_time_ms / 1000).toFixed(1)}s`,
     },
     awards.best_streak && {
-      icon: "🔥",
+      Icon: FireIcon,
+      tone: "text-orange-400",
       label: "Série de bonnes réponses",
       detail: `${awards.best_streak.nickname} — ${awards.best_streak.streak} d'affilée`,
     },
     awards.worst_streak && {
-      icon: "😬",
+      Icon: FrownIcon,
+      tone: "text-rose-400",
       label: "Série de mauvaises réponses",
       detail: `${awards.worst_streak.nickname} — ${awards.worst_streak.streak} d'affilée`,
     },
-    awards.most_consistent && { icon: "🎯", label: "Joueur le plus régulier", detail: awards.most_consistent.nickname },
+    awards.most_consistent && {
+      Icon: TargetIcon,
+      tone: "text-party-400",
+      label: "Joueur le plus régulier",
+      detail: awards.most_consistent.nickname,
+    },
     awards.most_unpredictable && {
-      icon: "🎲",
+      Icon: DiceIcon,
+      tone: "text-magenta-400",
       label: "Joueur le plus imprévisible",
       detail: awards.most_unpredictable.nickname,
     },
@@ -189,10 +200,15 @@ function AwardsPanel({ awards }) {
       <h4 className="text-sm font-semibold text-magenta-400 mb-2">Statistiques amusantes</h4>
       <div className="grid sm:grid-cols-2 gap-2">
         {items.map((it) => (
-          <div key={it.label} className="bg-party-950/40 border border-party-800/60 rounded-lg px-3 py-2 text-xs">
-            <span className="mr-1.5">{it.icon}</span>
-            <span className="font-medium text-ink-100">{it.label}</span>
-            <span className="text-ink-400"> — {it.detail}</span>
+          <div
+            key={it.label}
+            className="bg-party-950/40 border border-party-800/60 rounded-lg px-3 py-2 text-xs flex items-start gap-2"
+          >
+            <it.Icon size={16} className={`${it.tone} shrink-0 mt-0.5`} />
+            <span>
+              <span className="font-medium text-ink-100">{it.label}</span>
+              <span className="text-ink-400"> — {it.detail}</span>
+            </span>
           </div>
         ))}
       </div>

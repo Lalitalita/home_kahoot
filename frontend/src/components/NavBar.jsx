@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 
+import { CameraIcon, ChatIcon, HomeIcon, QuestionIcon, UsersIcon } from "./icons.jsx";
 import { LogoMark } from "./Logo.jsx";
 
 const links = [
@@ -14,11 +15,11 @@ const links = [
 // tab bar on phones — the header row scrolls horizontally and doesn't read
 // as "app-like", so on small screens it's replaced by this instead.
 const tabs = [
-  { to: "/", icon: "🏠", label: "Accueil", end: true },
-  { to: "/invites", icon: "👥", label: "Invités" },
-  { to: "/quiz/proposer", icon: "❓", label: "Quiz" },
-  { to: "/mur", icon: "💬", label: "Mur" },
-  { to: "/galerie", icon: "📸", label: "Galerie" },
+  { to: "/", Icon: HomeIcon, label: "Accueil", end: true },
+  { to: "/invites", Icon: UsersIcon, label: "Invités" },
+  { to: "/quiz/proposer", Icon: QuestionIcon, label: "Quiz" },
+  { to: "/mur", Icon: ChatIcon, label: "Mur" },
+  { to: "/galerie", Icon: CameraIcon, label: "Galerie" },
 ];
 
 export default function NavBar() {
@@ -69,7 +70,7 @@ export default function NavBar() {
               }`
             }
           >
-            <span className="text-xl leading-none">{t.icon}</span>
+            <t.Icon size={22} />
             {t.label}
           </NavLink>
         ))}

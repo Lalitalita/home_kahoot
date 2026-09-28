@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api, downloadCsv } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { UserIcon } from "../../components/icons.jsx";
 
 const emptyForm = { name: "", pseudo: "", description: "" };
 
@@ -165,7 +166,7 @@ export default function AdminGuests() {
                     {g.photo_url ? (
                       <img src={g.photo_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      "🙂"
+                      <UserIcon size={18} className="text-ink-400" />
                     )}
                     <input
                       type="file"

@@ -3,6 +3,17 @@ import { useNavigate } from "react-router-dom";
 
 import { api } from "../../api.js";
 import Confetti from "../../components/Confetti.jsx";
+import {
+  CheckCircleIcon,
+  ConfettiIcon,
+  CrystalBallIcon,
+  FrownIcon,
+  HourglassIcon,
+  MailIcon,
+  TargetIcon,
+  TrophyIcon,
+  UserIcon,
+} from "../../components/icons.jsx";
 import { CHOICE_STYLES } from "../../components/quizTheme.js";
 import { wsUrl } from "../../ws.js";
 
@@ -65,7 +76,9 @@ export default function Controller() {
   return (
     <div className="min-h-dvh flex flex-col safe-p bg-ink-900 party-scale-down">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-white font-semibold">👤 {nickname}</span>
+        <span className="text-white font-semibold flex items-center gap-1.5">
+          <UserIcon size={18} /> {nickname}
+        </span>
         <span className={`text-xs ${connected ? "text-green-400" : "text-red-400"}`}>
           {connected ? "Connecté" : "Reconnexion..."}
         </span>
@@ -74,7 +87,7 @@ export default function Controller() {
       <div className="flex-1 flex flex-col items-center justify-center text-center">
         {!state || phase === "lobby" ? (
           <div className="space-y-3 w-full max-w-sm">
-            <div className="text-5xl animate-pulse">⏳</div>
+            <HourglassIcon size={48} className="mx-auto text-party-400 animate-pulse" />
             <p className="text-ink-200 text-lg">En attente du début du quiz...</p>
             <p className="text-ink-500 text-sm">Regarde l'écran principal !</p>
             {state?.leaderboard?.length >= 2 && (
@@ -98,7 +111,7 @@ export default function Controller() {
           </div>
         ) : phase === "question" && hasAnswered ? (
           <div className="space-y-3">
-            <div className="text-5xl animate-bounce">✅</div>
+            <CheckCircleIcon size={48} className="mx-auto text-emerald-400 animate-bounce" />
             <p className="text-ink-200 text-lg">Réponse envoyée !</p>
             <p className="text-ink-500 text-sm">On attend les autres...</p>
           </div>
@@ -108,7 +121,11 @@ export default function Controller() {
               <p className="text-ink-400">Temps écoulé, tu n'as pas répondu à temps.</p>
             ) : lastResult ? (
               <>
-                <div className="text-5xl">{lastResult.is_correct ? "🎉" : "😬"}</div>
+                {lastResult.is_correct ? (
+                  <ConfettiIcon size={48} className="mx-auto text-party-400" />
+                ) : (
+                  <FrownIcon size={48} className="mx-auto text-rose-400" />
+                )}
                 <p className="text-xl font-bold text-white">
                   {lastResult.is_correct ? "Bonne réponse !" : "Raté !"}
                 </p>
@@ -118,14 +135,14 @@ export default function Controller() {
               </>
             ) : (
               <>
-                <div className="text-4xl animate-pulse">⏳</div>
+                <HourglassIcon size={36} className="mx-auto text-ink-400 animate-pulse" />
                 <p className="text-ink-400">Calcul du résultat...</p>
               </>
             )}
           </div>
         ) : phase === "leaderboard" ? (
           <div className="space-y-2">
-            <div className="text-5xl">🏆</div>
+            <TrophyIcon size={48} className="mx-auto text-amber-400" />
             <p className="text-ink-200">Ton classement</p>
             <p className="text-4xl font-bold text-white">
               {myRank >= 0 ? `#${myRank + 1}` : "-"}
@@ -149,21 +166,33 @@ function FinalResult({ playerId, state }) {
   return (
     <div className="space-y-4 w-full max-w-sm">
       {isTop3 && <Confetti />}
-      <div className="text-6xl">{isTop3 ? "🏆" : "🎉"}</div>
+      {isTop3 ? (
+        <TrophyIcon size={64} className="mx-auto text-amber-400" />
+      ) : (
+        <ConfettiIcon size={64} className="mx-auto text-party-400" />
+      )}
       <p className="text-2xl font-bold text-white">
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}
       </p>
       <p className="text-ink-400">Le classement final est affiché sur l'écran.</p>
-      <p className="text-ink-500 text-sm">Ton récap t'a été envoyé par email 📧</p>
+      <p className="text-ink-500 text-sm flex items-center justify-center gap-1.5">
+        <MailIcon size={15} /> Ton récap t'a été envoyé par email
+      </p>
       {myPrediction && (
         <div className="bg-ink-800/70 rounded-xl p-3 text-sm text-left">
-          <p className="text-magenta-400 font-semibold mb-1">🔮 Ton pronostic</p>
-          <p className="text-ink-300">
-            {myPrediction.correct_slots === 3
-              ? "Pile poil, chapeau ! 🎯"
-              : myPrediction.correct_slots > 0
-              ? `${myPrediction.correct_slots}/3 bonnes places trouvées`
-              : "Aucune place trouvée, tentative honorable !"}
+          <p className="text-magenta-400 font-semibold mb-1 flex items-center gap-1.5">
+            <CrystalBallIcon size={16} /> Ton pronostic
+          </p>
+          <p className="text-ink-300 flex items-center gap-1.5">
+            {myPrediction.correct_slots === 3 ? (
+              <>
+                Pile poil, chapeau ! <TargetIcon size={14} className="text-party-400" />
+              </>
+            ) : myPrediction.correct_slots > 0 ? (
+              `${myPrediction.correct_slots}/3 bonnes places trouvées`
+            ) : (
+              "Aucune place trouvée, tentative honorable !"
+            )}
           </p>
         </div>
       )}
@@ -199,18 +228,23 @@ function PredictionForm({ playerId, leaderboard }) {
 
   if (submitted) {
     return (
-      <div className="bg-ink-800/70 rounded-xl p-3 text-sm text-party-300">
-        🔮 Pronostic enregistré ! Tu peux le changer tant que le quiz n'a pas démarré.
-        <button className="block mt-1 text-ink-400 underline" onClick={() => setSubmitted(false)}>
-          Modifier
-        </button>
+      <div className="bg-ink-800/70 rounded-xl p-3 text-sm text-party-300 flex items-start gap-1.5">
+        <CrystalBallIcon size={16} className="shrink-0 mt-0.5" />
+        <span>
+          Pronostic enregistré ! Tu peux le changer tant que le quiz n'a pas démarré.
+          <button className="block mt-1 text-ink-400 underline" onClick={() => setSubmitted(false)}>
+            Modifier
+          </button>
+        </span>
       </div>
     );
   }
 
   return (
     <form onSubmit={submit} className="bg-ink-800/70 rounded-xl p-3 space-y-2 text-left">
-      <p className="text-sm text-magenta-400 font-semibold">🔮 Pronostique le podium</p>
+      <p className="text-sm text-magenta-400 font-semibold flex items-center gap-1.5">
+        <CrystalBallIcon size={16} /> Pronostique le podium
+      </p>
       {[
         ["1er", first, setFirst],
         ["2ème", second, setSecond],

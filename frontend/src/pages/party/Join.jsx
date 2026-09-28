@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { GamepadIcon } from "../../components/icons.jsx";
+
 export default function Join() {
   const [nickname, setNickname] = useState(localStorage.getItem("player_nickname") || "");
   const [code, setCode] = useState(localStorage.getItem("guest_access_code") || "");
@@ -20,7 +22,7 @@ export default function Join() {
   return (
     <div className="min-h-dvh flex items-center justify-center safe-p bg-ink-900">
       <div className="card w-full max-w-sm space-y-5 text-center">
-        <div className="text-5xl">🎮</div>
+        <GamepadIcon size={48} className="mx-auto text-party-400" />
         <h1 className="text-2xl font-bold text-white">Rejoindre le quiz</h1>
         <p className="text-sm text-ink-400">
           Choisis un pseudo pour le grand quiz de la soirée. Regarde l'écran principal pour suivre

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api, downloadCsv } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { CheckIcon } from "../../components/icons.jsx";
 
 const STATUS_STYLE = {
   pending: "bg-amber-100 text-amber-700",
@@ -151,10 +152,10 @@ export default function AdminQuestions() {
                       <button
                         type="button"
                         title="Marquer comme bonne réponse"
-                        className="text-xs text-ink-500 hover:text-emerald-600 shrink-0"
+                        className="text-ink-500 hover:text-emerald-500 shrink-0"
                         onClick={() => updateField(q, "correct_index", n - 1)}
                       >
-                        ✓
+                        <CheckIcon size={16} />
                       </button>
                     </div>
                   ))}
