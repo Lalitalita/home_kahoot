@@ -5,7 +5,7 @@ import { api } from "../../api.js";
 import Confetti from "../../components/Confetti.jsx";
 import {
   CheckCircleIcon,
-  ConfettiIcon,
+  PartyHornIcon,
   CrystalBallIcon,
   FrownIcon,
   HourglassIcon,
@@ -122,7 +122,7 @@ export default function Controller() {
             ) : lastResult ? (
               <>
                 {lastResult.is_correct ? (
-                  <ConfettiIcon size={48} className="mx-auto text-party-400" />
+                  <PartyHornIcon size={48} className="mx-auto text-party-400" />
                 ) : (
                   <FrownIcon size={48} className="mx-auto text-rose-400" />
                 )}
@@ -169,7 +169,7 @@ function FinalResult({ playerId, state }) {
       {isTop3 ? (
         <TrophyIcon size={64} className="mx-auto text-amber-400" />
       ) : (
-        <ConfettiIcon size={64} className="mx-auto text-party-400" />
+        <PartyHornIcon size={64} className="mx-auto text-party-400" />
       )}
       <p className="text-2xl font-bold text-white">
         {isTop3 ? `Bravo, ${rank + 1}${rank === 0 ? "er" : "ème"} !` : "Merci d'avoir joué !"}

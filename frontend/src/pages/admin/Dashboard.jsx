@@ -7,7 +7,7 @@ import {
   ChatIcon,
   CheckCircleIcon,
   CoinIcon,
-  ConfettiIcon,
+  PartyHornIcon,
   MoonIcon,
   QuestionIcon,
   UsersIcon,
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
       >
         <div className="flex items-center gap-4">
           <span className={`shrink-0 ${partyMode ? "text-magenta-400" : "text-ink-400"}`}>
-            {partyMode ? <ConfettiIcon size={32} /> : <MoonIcon size={32} />}
+            {partyMode ? <PartyHornIcon size={32} /> : <MoonIcon size={32} />}
           </span>
           <div>
             <h2 className="font-semibold text-ink-50">Mode soirée</h2>

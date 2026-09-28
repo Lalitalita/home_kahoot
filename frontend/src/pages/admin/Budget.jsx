@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
+import { TYPE_LABEL, TYPE_STYLE } from "../../components/scheduleTypes.js";
 
 const emptyForm = { name: "", price: "", prep_time_minutes: "", allergens: "", notes: "" };
 
@@ -289,17 +290,8 @@ function BudgetSection({ title, category, items, tasks, showAllergens, onChange 
 // or the sum of every linked planning task's duration once at least one is
 // linked — that total then becomes read-only, since it's computed.
 function PrepTimeCell({ item, tasks, onSave, onChange }) {
-  const [open, setOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const linked = item.linked_tasks || [];
-  const linkedIds = linked.map((t) => t.id);
-
-  async function toggleTask(taskId) {
-    const next = linkedIds.includes(taskId)
-      ? linkedIds.filter((id) => id !== taskId)
-      : [...linkedIds, taskId];
-    await api.put(`/api/admin/budget/items/${item.id}/tasks`, { schedule_item_ids: next }, { auth: true });
-    onChange();
-  }
 
   return (
     <div>
@@ -328,34 +320,141 @@ function PrepTimeCell({ item, tasks, onSave, onChange }) {
       <button
         type="button"
         className="text-xs text-party-400 hover:underline mt-0.5"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setModalOpen(true)}
       >
-        {open ? "Fermer" : linked.length > 0 ? "Modifier les tâches liées" : "Lier des tâches"}
+        {linked.length > 0 ? "Modifier les tâches liées" : "Lier des tâches"}
       </button>
-      {open && (
-        <div className="mt-1 w-full max-w-xs bg-ink-850 border border-ink-700 rounded-lg p-2 space-y-0.5 max-h-40 overflow-y-auto">
-          {tasks.length === 0 && (
-            <p className="text-xs text-ink-500 px-1 py-1">
-              Aucun bloc dans le planning pour l'instant.
+      {modalOpen && (
+        <TaskLinkModal
+          item={item}
+          tasks={tasks}
+          onClose={() => setModalOpen(false)}
+          onChange={onChange}
+        />
+      )}
+    </div>
+  );
+}
+
+// A search-and-select popup rather than a cramped inline checklist — shows
+// each task's type, start time and duration so there's no doubt about which
+// "Préparer le gâteau" is meant when several blocks share a similar name.
+function TaskLinkModal({ item, tasks, onClose, onChange }) {
+  const [query, setQuery] = useState("");
+  const [selected, setSelected] = useState((item.linked_tasks || []).map((t) => t.id));
+  const [saving, setSaving] = useState(false);
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filtered = normalizedQuery
+    ? tasks.filter((t) => t.title.toLowerCase().includes(normalizedQuery))
+    : tasks;
+
+  function toggle(taskId) {
+    setSelected((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
+    );
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      await api.put(
+        `/api/admin/budget/items/${item.id}/tasks`,
+        { schedule_item_ids: selected },
+        { auth: true }
+      );
+      onChange();
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const totalMinutes = tasks
+    .filter((t) => selected.includes(t.id))
+    .reduce((sum, t) => sum + t.duration_minutes, 0);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        className="bg-ink-900 border border-ink-700 rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b border-ink-800">
+          <h3 className="font-semibold text-ink-50">Lier des tâches — {item.name}</h3>
+          <input
+            autoFocus
+            className="input mt-3"
+            placeholder="Rechercher une tâche du planning..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-2">
+          {filtered.length === 0 && (
+            <p className="text-sm text-ink-500 text-center py-8">
+              {tasks.length === 0
+                ? "Aucun bloc dans le planning pour l'instant."
+                : "Aucune tâche ne correspond à cette recherche."}
             </p>
           )}
-          {tasks.map((t) => (
-            <label
-              key={t.id}
-              className="flex items-center gap-2 text-xs text-ink-200 px-1 py-1 hover:bg-ink-800 rounded cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={linkedIds.includes(t.id)}
-                onChange={() => toggleTask(t.id)}
-                className="accent-party-500 shrink-0"
-              />
-              <span className="truncate flex-1">{t.title}</span>
-              <span className="text-ink-500 shrink-0">{t.duration_minutes} min</span>
-            </label>
-          ))}
+          {filtered.map((t) => {
+            const isSelected = selected.includes(t.id);
+            return (
+              <label
+                key={t.id}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer border mb-1 ${
+                  isSelected
+                    ? "bg-party-950/40 border-party-700/60"
+                    : "border-transparent hover:bg-ink-800"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => toggle(t.id)}
+                  className="accent-party-500 shrink-0"
+                />
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full text-white shrink-0 ${TYPE_STYLE[t.type]}`}
+                >
+                  {TYPE_LABEL[t.type]}
+                </span>
+                <span className="flex-1 min-w-0 text-sm text-ink-100 truncate">{t.title}</span>
+                <span className="text-xs text-ink-400 font-mono shrink-0">
+                  {t.start_label ? `${t.start_label} · ` : ""}
+                  {t.duration_minutes} min
+                </span>
+              </label>
+            );
+          })}
         </div>
-      )}
+
+        <div className="p-4 border-t border-ink-800 flex items-center justify-between gap-3">
+          <span className="text-sm text-ink-400">
+            {selected.length > 0
+              ? `${selected.length} tâche(s) — ${totalMinutes} min`
+              : "Aucune tâche liée"}
+          </span>
+          <div className="flex gap-2 shrink-0">
+            <button type="button" className="btn-secondary py-2 px-4 text-sm" onClick={onClose}>
+              Annuler
+            </button>
+            <button
+              type="button"
+              className="btn-primary py-2 px-4 text-sm disabled:opacity-50"
+              onClick={save}
+              disabled={saving}
+            >
+              {saving ? "..." : "Valider"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

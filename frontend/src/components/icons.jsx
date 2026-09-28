@@ -251,15 +251,44 @@ export function TargetIcon(props) {
   );
 }
 
-export function ConfettiIcon(props) {
+export function PartyHornIcon(props) {
   return (
-    <Svg {...props}>
-      <path d="M5 19 15 9" {...stroke} />
-      <rect x="13.2" y="4.2" width="2.6" height="2.6" rx="0.6" transform="rotate(20 14.5 5.5)" fill="currentColor" />
-      <circle cx="19" cy="8" r="1.3" fill="currentColor" />
-      <rect x="16.6" y="12.4" width="2.6" height="2.6" rx="0.6" transform="rotate(-15 17.9 13.7)" fill="currentColor" />
-      <circle cx="7" cy="6" r="1.1" fill="currentColor" />
-      <path d="M4 13.5 3 19l5.5-1" {...stroke} />
+    <Svg {...props} viewBox="0 0 26 26">
+      <path d="M4 20 L8 5 Q16 4 21 11 Z" fill="currentColor" />
+      <path
+        d="M5.4 14.75 9.95 16.85M6.4 11 14.2 14.6"
+        stroke="rgba(0,0,0,0.35)"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M4 20 q-2.2 1 -1.6 3.2 q0.6 1.9 2.3 0.9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <rect
+        x="21.5"
+        y="5"
+        width="2"
+        height="2"
+        rx="0.4"
+        transform="rotate(20 22.5 6)"
+        fill="currentColor"
+        opacity="0.85"
+      />
+      <circle cx="24" cy="9.5" r="1" fill="currentColor" />
+      <rect
+        x="17.5"
+        y="2"
+        width="1.6"
+        height="1.6"
+        rx="0.4"
+        transform="rotate(-15 18.3 2.8)"
+        fill="currentColor"
+        opacity="0.85"
+      />
     </Svg>
   );
 }

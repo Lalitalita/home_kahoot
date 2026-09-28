@@ -296,6 +296,9 @@ class LinkedTask(BaseModel):
     title: str
     type: ScheduleItemType
     duration_minutes: int
+    # Computed HH:MM the block starts at, per the current day-start + order —
+    # only filled in by the /budget/tasks picker endpoint, not stored.
+    start_label: str | None = None
 
 
 class BudgetItemAdmin(BaseModel):

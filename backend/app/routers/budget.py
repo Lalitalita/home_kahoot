@@ -63,6 +63,32 @@ def _conflicts_for_item(item: BudgetItem, guests: list[Guest]) -> list[AllergyCo
     return conflicts
 
 
+def _to_minutes(hhmm: str) -> int:
+    h, m = hhmm.split(":")
+    return int(h) * 60 + int(m)
+
+
+def _to_hhmm(total_minutes: int) -> str:
+    wrapped = total_minutes % 1440
+    return f"{wrapped // 60:02d}:{wrapped % 60:02d}"
+
+
+def _task_start_labels(db: Session) -> dict[str, str]:
+    """Mirrors the frontend's computeTimeline: walks the ordered planning
+    blocks, accumulating duration, reanchoring on fixed_start_time — so the
+    task picker can show 'starts at 10:20' next to each task."""
+    settings_row = _get_or_create_settings(db)
+    items = db.query(ScheduleItem).order_by(ScheduleItem.order_index, ScheduleItem.created_at).all()
+    clock = _to_minutes(settings_row.day_start_time or "10:00")
+    labels: dict[str, str] = {}
+    for item in items:
+        if item.fixed_start_time:
+            clock = _to_minutes(item.fixed_start_time)
+        labels[item.id] = _to_hhmm(clock)
+        clock += item.duration_minutes
+    return labels
+
+
 def _serialize(item: BudgetItem, guests: list[Guest]) -> BudgetItemAdmin:
     data = BudgetItemAdmin.model_validate(item)
     data.conflicts = _conflicts_for_item(item, guests)
@@ -135,7 +161,14 @@ def list_available_tasks(
 ):
     # Minimal read-only view of the planning blocks, just enough to build
     # the task picker here — doesn't require the "planning" permission.
-    return db.query(ScheduleItem).order_by(ScheduleItem.order_index).all()
+    items = db.query(ScheduleItem).order_by(ScheduleItem.order_index, ScheduleItem.created_at).all()
+    starts = _task_start_labels(db)
+    result = []
+    for item in items:
+        task = LinkedTask.model_validate(item)
+        task.start_label = starts.get(item.id)
+        result.append(task)
+    return result
 
 
 @router.put("/items/{item_id}/tasks", response_model=BudgetItemAdmin)

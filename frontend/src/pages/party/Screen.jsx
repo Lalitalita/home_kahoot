@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Confetti from "../../components/Confetti.jsx";
 import {
   CheckIcon,
-  ConfettiIcon,
+  PartyHornIcon,
   CrystalBallIcon,
   MedalIcon,
   TimerIcon,
@@ -71,8 +71,8 @@ function Lobby({ state }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
       <h1 className="font-display text-6xl font-extrabold flex items-center justify-center gap-4">
-        <ConfettiIcon size={52} className="text-party-400" /> Quiz d'anniversaire
-        <ConfettiIcon size={52} className="text-magenta-400" />
+        <PartyHornIcon size={52} className="text-party-400" /> Quiz d'anniversaire
+        <PartyHornIcon size={52} className="text-magenta-400" />
       </h1>
       <p className="text-2xl text-ink-200">
         Rejoins sur <span className="font-mono text-party-400">{origin}/soiree</span>
@@ -262,8 +262,8 @@ function FinishedView({ state }) {
     <div className="flex-1 flex flex-col items-center justify-center gap-8">
       <Confetti count={120} />
       <h2 className="font-display text-5xl font-extrabold text-center flex items-center justify-center gap-4">
-        <ConfettiIcon size={44} className="text-party-400" /> Merci d'avoir joué !
-        <ConfettiIcon size={44} className="text-magenta-400" />
+        <PartyHornIcon size={44} className="text-party-400" /> Merci d'avoir joué !
+        <PartyHornIcon size={44} className="text-magenta-400" />
       </h2>
       <div className="flex items-end gap-6">
         {order.map((i) => (

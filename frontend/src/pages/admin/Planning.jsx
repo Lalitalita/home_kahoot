@@ -3,18 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../api.js";
 import AdminLayout from "../../components/AdminLayout.jsx";
 import { PinIcon } from "../../components/icons.jsx";
-
-const TYPE_LABEL = {
-  activity: "Activité",
-  meal_prep: "Repas / préparation",
-  break: "Pause",
-};
-
-const TYPE_STYLE = {
-  activity: "bg-party-600",
-  meal_prep: "bg-amber-600",
-  break: "bg-sky-700",
-};
+import { TYPE_LABEL, TYPE_STYLE } from "../../components/scheduleTypes.js";
 
 const emptyForm = { type: "activity", title: "", duration_minutes: 30, fixed_start_time: "", notes: "" };
 
