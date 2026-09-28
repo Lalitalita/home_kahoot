@@ -107,7 +107,6 @@ class GuestPublic(BaseModel):
     photo_url: str | None
     description: str | None
     bringing_item: str | None
-    social_group: str | None
 
 
 class GuestSelf(BaseModel):
@@ -126,7 +125,6 @@ class GuestSelf(BaseModel):
     intolerances: str | None
     dietary_comment: str | None
     bringing_item: str | None
-    social_group: str | None
 
 
 class GuestSelfUpdate(BaseModel):
@@ -160,7 +158,6 @@ class GuestUpdateAdmin(BaseModel):
     dietary_comment: str | None = None
     bringing_item: str | None = None
     email: str | None = None
-    social_group: str | None = None
 
 
 # ---------- Questions ----------
@@ -250,6 +247,9 @@ class AppSettingsPublic(BaseModel):
     party_date: str | None = None
     party_time: str | None = None
     gallery_url: str | None = None
+    # Sourced from the GALLERY_PASSWORD env var, not from the DB row — see
+    # the /settings endpoint, which fills this in manually.
+    gallery_password: str | None = None
 
 
 class PartyInfoUpdate(BaseModel):

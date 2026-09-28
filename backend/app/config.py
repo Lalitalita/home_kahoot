@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # the sender address itself — an email to yourself — if left blank.
     admin_recap_email: str = ""
 
+    # Password for the shared Immich photo album (set in .env, not editable
+    # from the admin UI) — shown to guests on the Galerie page so they can
+    # unlock the album themselves instead of asking for it individually.
+    gallery_password: str = ""
+
     @property
     def smtp_configured(self) -> bool:
         return bool(self.smtp_host and self.smtp_username and self.smtp_password)

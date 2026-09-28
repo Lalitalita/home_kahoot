@@ -92,10 +92,6 @@ class Guest(Base):
     dietary_comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     bringing_item: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Admin-set free-text group label (e.g. "BTS", "Collègues", "Amis d'enfance")
-    # used to cluster guests on the public "Qui est qui" social page.
-    social_group: Mapped[str | None] = mapped_column(String, nullable=True)
-
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

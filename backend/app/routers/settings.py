@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.database import get_db
 from app.deps import require_permission
 from app.models import Admin, AppSettings
@@ -24,7 +25,16 @@ def _get_or_create_settings(db: Session) -> AppSettings:
 
 @router.get("/settings", response_model=AppSettingsPublic)
 def get_settings_public(db: Session = Depends(get_db)):
-    return _get_or_create_settings(db)
+    settings_row = _get_or_create_settings(db)
+    return AppSettingsPublic(
+        party_mode_active=settings_row.party_mode_active,
+        party_location_name=settings_row.party_location_name,
+        party_address=settings_row.party_address,
+        party_date=settings_row.party_date,
+        party_time=settings_row.party_time,
+        gallery_url=settings_row.gallery_url,
+        gallery_password=get_settings().gallery_password or None,
+    )
 
 
 class PartyModeUpdate(BaseModel):

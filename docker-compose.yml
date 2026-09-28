@@ -18,6 +18,7 @@ services:
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-contact@amonita.fr}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Anniv Lana}
       ADMIN_RECAP_EMAIL: ${ADMIN_RECAP_EMAIL:-contact@amonita.fr}
+      GALLERY_PASSWORD: ${GALLERY_PASSWORD:-}
     volumes:
       - party_data:/data
     expose:
