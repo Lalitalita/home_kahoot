@@ -1,0 +1,21 @@
+services:
+  netadmin:
+    build: .
+    container_name: netadmin
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:8000"
+    environment:
+      ADMIN_USER: ${ADMIN_USER:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      SECRET_KEY: ${SECRET_KEY:-}
+    volumes:
+      - netadmin_data:/data
+    # Accès console (câble USB-série) : décommente et adapte les ports
+    # devices:
+    #   - /dev/ttyUSB0:/dev/ttyUSB0
+    # group_add:
+    #   - dialout
+
+volumes:
+  netadmin_data:

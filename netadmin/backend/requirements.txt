@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+sqlalchemy>=2.0
+netmiko>=4.3
+ntc-templates>=5.0
+pyserial>=3.5
+cryptography>=42
+pyjwt>=2.8
